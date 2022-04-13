@@ -1,0 +1,9 @@
+kubernetes==19.15.0
+kopf==1.35.2
+azure-mgmt-rdbms==10.0.0
+azure-identity==1.7.1
+azure-mgmt-resource==20.0.0
+psycopg2-binary==2.9.2
+azure-mgmt-privatedns==1.0.0
+azure-mgmt-network==19.3.0
+pyyaml==6.0

@@ -1,0 +1,80 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/maibornwolff/hybrid-cloud-postgresql-operator
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "dev"
+
+imagePullSecrets: []
+nameOverride: "hybrid-cloud-postgresql-operator"
+fullnameOverride: "hybrid-cloud-postgresql-operator"
+
+serviceAccount:
+  # Specifies whether a service account with permissions should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  name: null
+
+# Operator config.yaml
+operatorConfig: |
+  backend: helmbitnami
+  backends:
+    helmbitnami:
+      admin_username: postgres
+
+# The name of a secret whose data will be provided to the operator as environment variables (using the envFrom mechanism)
+# Use this to provide sensitive information like azure credentials to the operator
+envSecret: null
+
+# A list of environment variables (with name, value) to provide to the operator
+extraEnv: []
+
+# List of volumes to mount into the operator pod
+volumes: []
+# List of volume mounts for the operator pod
+volumeMounts: []
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+pod:
+  ports:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
+
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: http
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+strategy:
+  type: Recreate

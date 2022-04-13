@@ -1,0 +1,32 @@
+# An example for azure with some firewall settings. Requires the azure backends to be configured and enabled
+apiVersion: hybridcloud.maibornwolff.de/v1alpha1
+kind: PostgreSQLServer
+metadata:
+  name: demoteam
+  namespace: default
+spec:
+  backend: azurepostgresflexible
+  version: latest
+  size:
+    cpu: 1
+    memoryMB: 512
+    storageGB: 1
+  network:
+    firewallRules:
+      - name: foobar
+        startIp: 88.217.39.105
+        endIp: 88.217.39.105
+  credentialsSecret: demoteam-postgres-credentials
+---
+apiVersion: hybridcloud.maibornwolff.de/v1alpha1
+kind: PostgreSQLDatabase
+metadata:
+  name: demoservice
+  namespace: default
+spec:
+  serverRef:
+    name: demoteam
+  database:
+    charset: UTF8
+    collation: en_US.utf8
+  credentialsSecret: demoservice-postgres-credentials

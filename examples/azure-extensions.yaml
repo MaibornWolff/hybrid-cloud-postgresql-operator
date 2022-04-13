@@ -1,0 +1,31 @@
+# An example for azure with some firewall settings. Requires the azure backends to be configured and enabled
+apiVersion: hybridcloud.maibornwolff.de/v1alpha1
+kind: PostgreSQLServer
+metadata:
+  name: demoteam
+  namespace: default
+spec:
+  backend: azurepostgresflexible
+  version: latest
+  size:
+    cpu: 1
+    memoryMB: 512
+    storageGB: 1
+  extensions:
+    - timescaledb
+  credentialsSecret: demoteam-postgres-credentials
+---
+apiVersion: hybridcloud.maibornwolff.de/v1alpha1
+kind: PostgreSQLDatabase
+metadata:
+  name: demoservice
+  namespace: default
+spec:
+  serverRef:
+    name: demoteam
+  database:
+    charset: UTF8
+    collation: en_US.utf8
+    extensions:
+      - timescaledb
+  credentialsSecret: demoservice-postgres-credentials

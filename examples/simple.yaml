@@ -1,0 +1,23 @@
+# A simple example, can be used with any backend
+apiVersion: hybridcloud.maibornwolff.de/v1alpha1
+kind: PostgreSQLServer
+metadata:
+  name: demoteam
+  namespace: default
+spec:
+  version: latest
+  size:
+    cpu: 1
+    memoryMB: 512
+    storageGB: 1
+  credentialsSecret: demoteam-postgres-credentials
+---
+apiVersion: hybridcloud.maibornwolff.de/v1alpha1
+kind: PostgreSQLDatabase
+metadata:
+  name: demoservice
+  namespace: default
+spec:
+  serverRef:
+    name: demoteam
+  credentialsSecret: demoservice-postgres-credentials

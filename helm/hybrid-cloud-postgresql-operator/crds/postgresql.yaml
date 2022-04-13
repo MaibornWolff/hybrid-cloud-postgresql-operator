@@ -1,0 +1,153 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: postgresqlservers.hybridcloud.maibornwolff.de
+spec:
+  scope: Namespaced
+  group: hybridcloud.maibornwolff.de
+  names:
+    kind: PostgreSQLServer
+    plural: postgresqlservers
+    singular: postgresqlserver
+    shortNames:
+      - pg
+      - postgre
+      - postgres
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                backend:
+                  type: string
+                credentialsSecret:
+                  type: string
+                version:
+                  type: string
+                size:
+                  type: object
+                  properties:
+                    class:
+                      type: string
+                    cpu:
+                      type: integer
+                    memoryMB:
+                      type: integer
+                    storageGB:
+                      type: integer
+                    storageAutoGrow:
+                      type: boolean
+                backup:
+                  type: object
+                  properties:
+                    retentionDays:
+                      type: integer
+                    geoRedundant:
+                      type: boolean
+                extensions:
+                  type: array
+                  items:
+                    type: string
+                network:
+                  type: object
+                  properties:
+                    firewallRules:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          startIp:
+                            type: string
+                          endIp:
+                            type: string
+                        required:
+                          - name
+                          - startIp
+                          - endIp
+                maintenance:
+                  type: object
+                  properties:
+                    window:
+                      type: object
+                      properties:
+                        weekday:
+                          type: string
+                        starttime:
+                          type: string
+                      required:
+                        - weekday
+                        - starttime
+                highavailability:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+              required:
+                - credentialsSecret
+            status:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+              nullable: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: postgresqldatabases.hybridcloud.maibornwolff.de
+spec:
+  scope: Namespaced
+  group: hybridcloud.maibornwolff.de
+  names:
+    kind: PostgreSQLDatabase
+    plural: postgresqldatabases
+    singular: postgresqldatabase
+    shortNames:
+      - pgdb
+      - database
+      - db
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+              properties:
+                serverRef:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                  required:
+                    - name
+                database:
+                  type: object
+                  properties:
+                    charset:
+                      type: string
+                    collation:
+                      type: string
+                    extensions:
+                      type: array
+                      items:
+                        type: string
+                credentialsSecret:
+                  type: string
+              required:
+                - serverRef
+                - credentialsSecret
+            status:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+              nullable: true
