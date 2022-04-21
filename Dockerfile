@@ -13,7 +13,9 @@ RUN pip install -r /operator/requirements.txt
 # Download helm charts
 RUN chmod +x /usr/local/bin/helm \
     && helm repo add bitnami https://charts.bitnami.com/bitnami \
-    && helm pull bitnami/postgresql --untar --version 10.16.1 --destination charts
+    && helm pull bitnami/postgresql --untar --version 10.16.1 --destination charts \
+    && helm repo add yugabytedb https://charts.yugabyte.com \
+    && helm pull yugabytedb/yugabyte --untar --version 2.13.0 --destination charts
 # Copy operator code
 COPY main.py /operator/
 COPY hybridcloud /operator/hybridcloud

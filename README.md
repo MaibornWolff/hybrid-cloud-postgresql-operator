@@ -10,7 +10,11 @@ Main features:
 
 * Provides Kubernetes Custom resources for deploying and managing PostgreSQL servers and databases
 * Abstracted, unified API regardless of target environment (cloud, on-premise)
-* Currently supports Azure Database for PostgreSQL single and flexible servers and on-premise deployments via [bitnami](https://charts.bitnami.com/bitnami) [helm chart](https://github.com/bitnami/charts/tree/master/bitnami/postgresql/) (prototype)
+* Currently supported backends:
+  * Azure Database for PostgreSQL single server
+  * Azure Database for PostgreSQL flexible server
+  * [bitnami](https://charts.bitnami.com/bitnami) [helm chart](https://github.com/bitnami/charts/tree/master/bitnami/postgresql/) (prototype)
+  * [Yugabyte](https://docs.yugabyte.com/preview/deploy/kubernetes/single-zone/oss/helm-chart/) helm chart deployment (prototype, due to limitations in the chart only one cluster per namespace is possible)
 
 ## Quickstart
 
@@ -96,6 +100,23 @@ backends:  # Configuration for the different backends. Required fields are only 
         cpu: "1000m"   # CPU requests/limits for the pod, required
         memory: "256Mi"  # Memory requests/limits for the pod, required
     admin_username: postgres  # Username to use as admin user, optional
+    pvc_cleanup: false  # If set to true the operator will when deleting a server also delete the persistent volumes, optional
+  helmyugabyte:
+    default_class: small  # Name of the class to use as default if the user-provided one is invalid or not available, required if classes should be usable
+    classes:  # List of instance classes the user can select from, optional
+      small:  # Name of the class
+        master:
+          cpu: "1000m"   # CPU requests/limits for the master pods, required
+          memory: "256Mi"  # Memory requests/limits for the master pod, required
+        tserver:
+          cpu: "1000m"  # CPU requests/limits for the tserver pods, required
+          memory: "256Mi"  # Memory requests/limits for the tserver pod, required
+    replicas_master: 1  # Number of replicas for the master nodes, set to 3 to get a HA cluster, optional
+    replicas_tserver: 1  # Number of replicas for the tserver nodes, set to 3 to get a HA cluster, optional
+    partitions_master: 1  # Number of partitions on the master nodes, optional
+    partitions_tserver: 1  # Number of partitions on the tserver nodes, optional
+    storage_class: ""  # Storage class to use for the pods, optional
+    pvc_cleanup: false  # If set to true the operator will when deleting a server also delete the persistent volumes, optional
 ```
 
 Single configuration options can also be provided via environment variables, the complete path is concatenated using underscores, written in uppercase and prefixed with `HYBRIDCLOUD_`. As an example: `backends.azure.subscription_id` becomes `HYBRIDCLOUD_BACKENDS_AZURE_SUBSCRIPTION_ID`.
@@ -197,7 +218,7 @@ spec:
   database:
     charset: UTF8  # charset to use for the database, default depends on the backend, optional
     collation: "de-DE"  # Collation to use for the database, default depends on the backend, optional
-    extensions: [] # List of extensions to activate in the database (via CREATE EXTENSION), only extensions provisioned for the server (via spec.extenions) can be activated here
+    extensions: [] # List of extensions to activate in the database (via CREATE EXTENSION), only extensions provisioned for the server (via spec.extensions) can be activated here
   credentialsSecret: fooservice-postgres-credentials   # Name of a secret where the credentials for the database should be stored
 ```
 

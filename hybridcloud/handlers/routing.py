@@ -1,6 +1,7 @@
 from ..backends.azure_postgresql import AzurePostgreSQLBackend
 from ..backends.azure_postgresqlflexible import AzurePostgreSQLFlexibleBackend
 from ..backends.helm_postgres import HelmPostgreSQLBackend
+from ..backends.helm_yugabyte import HelmYugabyteBackend
 from ..config import config_get, ConfigurationException
 
 
@@ -8,6 +9,7 @@ _backends = {
     "azurepostgres": AzurePostgreSQLBackend,
     "azurepostgresflexible": AzurePostgreSQLFlexibleBackend,
     "helmbitnami": HelmPostgreSQLBackend,
+    "helmyugabyte": HelmYugabyteBackend,
 }
 
 

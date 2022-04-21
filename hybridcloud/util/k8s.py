@@ -1,5 +1,6 @@
 import base64
 from dataclasses import dataclass
+import re
 import kopf
 import kubernetes
 
@@ -94,3 +95,20 @@ def patch_custom_object_status(resource: Resource, namespace: str, name: str, st
         "status": status
     }
     patch_custom_object(resource, namespace, name, body)
+
+
+def list_pvcs(namespace: str, name_pattern: str):
+    api = kubernetes.client.CoreV1Api()
+    pattern = re.compile(name_pattern)
+    pvcs = api.list_namespaced_persistent_volume_claim(namespace)
+    for pvc in pvcs.items:
+        if pattern.match(pvc.metadata.name):
+            yield pvc
+
+
+def delete_pvc(namespace: str, name: str):
+    api = kubernetes.client.CoreV1Api()
+    try:
+        api.delete_namespaced_persistent_volume_claim(name, namespace)
+    except:
+        pass
