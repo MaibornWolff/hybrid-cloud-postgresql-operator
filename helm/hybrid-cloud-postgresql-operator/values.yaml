@@ -17,6 +17,8 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   name: null
+  # This is required if the operator should install instances on-premise (helmbitnami or helmygabyte backends), can be disabled if you only use the Azure backends
+  clusterAdmin: true
 
 # Operator config.yaml
 operatorConfig: |
