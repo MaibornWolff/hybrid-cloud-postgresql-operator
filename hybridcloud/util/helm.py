@@ -22,6 +22,7 @@ def install_upgrade(namespace, name, chart, options, values=None):
     else:
         return run_helm(f"upgrade --install -n {namespace} {name} {chart} {options}", fail=True)
 
+
 def check_installed(namespace, name):
     res = run_helm(f"list -n {namespace} -o json")
     if res.returncode != 0:
@@ -31,6 +32,7 @@ def check_installed(namespace, name):
         if deployment["name"] == name:
             return True
     return False
+
 
 def uninstall(namespace, name):
     return run_helm(f"uninstall -n {namespace} {name}", fail=True)

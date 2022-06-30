@@ -18,6 +18,11 @@ EXTENSIONS_PARAMETER = "shared_preload_libraries"
 
 
 def _calc_name(namespace, name):
+    # Allow admins to override names so that existing storage accounts not following the schema can still be managed
+    name_overrides = _backend_config("name_overrides", default=[])
+    for override in name_overrides:
+        if override["namespace"] == namespace and override["name"] == name:
+            return override["azure_name"]
     return _backend_config("name_pattern", fail_if_missing=True).format(namespace=namespace, name=name)
 
 
