@@ -21,7 +21,7 @@ Main features:
 To test out the operator you do not need Azure, you just need a kubernetes cluster (you can for example create a local one with [k3d](https://k3d.io/)) and cluster-admin rights on it.
 
 1. Run `helm repo add maibornwolff https://maibornwolff.github.io/hybrid-cloud-postgresql-operator/` to prepare the helm repository.
-2. Run `helm install hybrid-cloud-postgresql-operator maibornwolff/hybrid-cloud-postgresql-operator` to install the operator.
+2. Run `helm install hybrid-cloud-postgresql-operator-crds maibornwolff/hybrid-cloud-postgresql-operator-crds` and `helm install hybrid-cloud-postgresql-operator maibornwolff/hybrid-cloud-postgresql-operator` to install the operator.
 3. Check if the pod of the operator is running and healthy: `kubectl get pods -l app.kubernetes.io/name=hybrid-cloud-postgresql-operator`.
 4. Create your first server: `kubectl apply -f examples/simple.yaml`.
 5. Check if the postgresql instance is deployed: `kubectl get pods -l app.kubernetes.io/instance=demoteam-postgresql`.
@@ -157,7 +157,8 @@ Unfortunately there is no built-in azure role for the Database for PostgreSQL se
 The operator can be deployed via helm chart:
 
 1. Run `helm repo add maibornwolff https://maibornwolff.github.io/hybrid-cloud-postgresql-operator/` to prepare the helm repository.
-2. Run `helm install hybrid-cloud-postgresql-operator maibornwolff/hybrid-cloud-postgresql-operator -f values.yaml` to install the operator.
+2. Run `helm install hybrid-cloud-postgresql-operator-crds maibornwolff/hybrid-cloud-postgresql-operator-crds` to install the CRDs for the operator.
+3. Run `helm install hybrid-cloud-postgresql-operator maibornwolff/hybrid-cloud-postgresql-operator -f values.yaml` to install the operator.
 
 Configuration of the operator is done via helm values. For a full list of the available values see the [values.yaml in the chart](./helm/hybrid-cloud-postgresql-operator/values.yaml). These are the important ones:
 
