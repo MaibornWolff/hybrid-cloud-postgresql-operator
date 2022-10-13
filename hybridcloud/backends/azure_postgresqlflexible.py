@@ -245,10 +245,11 @@ class AzurePostgreSQLFlexibleBackend:
             parameters = Database(charset=spec["database"].get("charset", "UTF8"), collation=spec["database"].get("collation", "en_US.utf8"))
             poller = self._db_client.databases.begin_create(self._resource_group, server_name, database_name, parameters)
             poller.result()
+        pgclient = self._pgclient(admin_credentials, database_name)
+        pgclient.restrict_database_permissions(database_name)
         extensions = spec["database"].get("extensions", [])
         if not extensions:
             return
-        pgclient = self._pgclient(admin_credentials, database_name)
         for extension in extensions:
             self._logger.info(f"Enabling extension {extension}")
             pgclient.create_extension(extension)

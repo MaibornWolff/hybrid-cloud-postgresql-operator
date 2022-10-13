@@ -21,13 +21,19 @@ class PostgresSQLClient:
         cursor = self._con.cursor()
         cursor.execute("SELECT datname FROM pg_database WHERE datname=%s", (name,))
         if len(cursor.fetchall()) == 0:
-            cursor.execute(f"CREATE DATABASE %s", (AsIs(name),))
+            cursor.execute("CREATE DATABASE %s", (AsIs(name),))
         cursor.close()
 
     def delete_database(self, name):
         cursor = self._con.cursor()
-        cursor.execute(f"DROP DATABASE IF EXISTS %s", (AsIs(name),))
-        cursor.close() 
+        cursor.execute("DROP DATABASE IF EXISTS %s", (AsIs(name),))
+        cursor.close()
+
+    def restrict_database_permissions(self, name):
+        cursor = self._con.cursor()
+        # Make sure only explicitly allowed users have access to this database
+        cursor.execute("REVOKE ALL PRIVILEGES ON DATABASE %s FROM PUBLIC", (AsIs(name),))
+        cursor.close()
 
     def create_or_update_user(self, name, password, database):
         cursor = self._con.cursor()

@@ -64,6 +64,7 @@ persistence:
     def create_or_update_database(self, namespace, server_name, database_name, spec, admin_credentials=None):
         pgclient = self._pgclient(admin_credentials)
         pgclient.create_database(database_name)
+        pgclient.restrict_database_permissions(database_name)
         return True
 
     def delete_database(self, namespace, server_name, database_name, admin_credentials=None):
