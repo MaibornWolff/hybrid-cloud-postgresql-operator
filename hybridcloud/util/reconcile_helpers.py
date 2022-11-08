@@ -3,6 +3,7 @@ import kopf
 from . import k8s
 from ..util import env
 from ..util.password import generate_password
+from ..config import config_get
 
 
 def ignore_control_label_change(diff):
@@ -73,7 +74,7 @@ def determine_resource_password(credentials_secret, tmp_secret_name):
     elif tmp_secret:
         password = base64.b64decode(tmp_secret.data["password"]).decode("utf-8")
     else:
-        password = generate_password(10)
+        password = generate_password(int(config_get("security.password_length", default=16)))
         k8s.create_secret(env.OPERATOR_NAMESPACE, tmp_secret_name, {"password": password})
     return password
 

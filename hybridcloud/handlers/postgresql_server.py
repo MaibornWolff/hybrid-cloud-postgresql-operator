@@ -46,7 +46,7 @@ def postgresql_server_handler(body, spec, status, meta, labels, name, namespace,
         nonlocal password
         if credentials_secret:
             # Generate a new password
-            password = generate_password(10)
+            password = generate_password(int(config_get("security.password_length", default=16)))
             k8s.delete_secret(namespace, spec["credentialsSecret"])
             k8s.create_or_update_secret(env.OPERATOR_NAMESPACE, tmp_secret_name, {"password": password})
             credentials_secret = None
