@@ -1,6 +1,6 @@
 # Hybrid Cloud Operator for PostgreSQL
 
-The Hybrid Cloud Operator for PostgreSQL is a Kubernetes operators that has been designed for hybrid cloud, multi-teams kubernetes platforms to allow teams to deploy and manage their own databases via kubernetes without cloud provider specific provisioning.
+The Hybrid Cloud Operator for PostgreSQL is a Kubernetes Operator that has been designed for hybrid cloud, multi-teams kubernetes platforms to allow teams to deploy and manage their own databases via kubernetes without cloud provider specific provisioning.
 
 In classical cloud environments things like databases would typically be managed by a central platform team via infrastructure automation like terraform. But this means when different teams are active on such a platform there exists a bottleneck because that central platform team must handle all requests for databases. With this operator teams in kubernetes gain the potential to manage databases on their own. And because the operator integrates into the kubernetes API the teams have the same unified interface/API for all their deployments: Kubernetes YAMLs.
 
