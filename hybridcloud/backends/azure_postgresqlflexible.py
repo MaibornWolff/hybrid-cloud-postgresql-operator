@@ -210,34 +210,50 @@ class AzurePostgreSQLFlexibleBackend:
         except ResourceNotFoundError:
             applied_allowed_extenions = []
         
+        should_restart = False
+
         if preload_extensions != applied_preload_extensions:
             self._logger.info(f"Updating list of extensions from {','.join(applied_preload_extensions)} to {','.join(extensions)}")
             # Update configuration
             poller = self._db_client.configurations.begin_put(self._resource_group, server_name, PRELOAD_PARAMETER, Configuration(value=",".join(extensions), source="user-override"))
             poller.result()
-            # Restart server
-            self._logger.info("Restarting server due to changed extensions preload configuration")
-            poller = self._db_client.servers.begin_restart(self._resource_group, server_name)
-            poller.result()
+            should_restart = True
         
         if extensions != applied_allowed_extenions:
             # Update configuration
             poller = self._db_client.configurations.begin_put(self._resource_group, server_name, EXTENSIONS_PARAMETER, Configuration(value=",".join(extensions), source="user-override"))
             poller.result()
+            should_restart = True
         
         for parameter in self._db_client.configurations.list_by_server(self._resource_group, server_name):
             if parameter.name in IGNORE_RESET_PARAMETERS:
                 continue
+            changed = False
+            value = ""
+
+            # Only Update configuration if parameter changed or reset if parameter got removed
             if parameter.name in server_parameters:
                 if parameter.value != server_parameters[parameter.name]:
-                    self._logger.info(f"Updating parameter from {parameter.name} to {server_parameters[parameter.name]}")
-                    poller = self._db_client.configurations.begin_put(self._resource_group, server_name, parameter.name, Configuration(value=server_parameters[parameter.name], source="user-override"))
-                    poller.result()
+                    self._logger.info(f"Updating parameter {parameter.name} to {server_parameters[parameter.name]}")
+                    value = server_parameters[parameter.name]
+                    changed = True
             else:
                 if parameter.value != parameter.default_value:
-                    self._logger.info(f"Resetting parameter from {parameter.name} to {parameter.default_value}")
-                    poller = self._db_client.configurations.begin_put(self._resource_group, server_name, parameter.name, Configuration(value=parameter.default_value, source="user-override"))
-                    poller.result()
+                    self._logger.info(f"Resetting parameter {parameter.name} to {parameter.default_value}")
+                    value = parameter.default_value
+                    changed = True
+
+            if changed:
+                poller = self._db_client.configurations.begin_put(self._resource_group, server_name, parameter.name, Configuration(value=value, source="user-override"))
+                poller.result()
+                should_restart = True
+
+        if should_restart:
+            # Restart server
+            self._logger.info("Restarting server due to changed server parameters")
+            poller = self._db_client.servers.begin_restart(self._resource_group, server_name)
+            poller.result()
+            self._logger.info("Initiated server restart")
 
         # Prepare credentials
         data = {
@@ -313,7 +329,6 @@ class AzurePostgreSQLFlexibleBackend:
 
     def _pgclient(self, admin_credentials, dbname=None) -> PostgresSQLClient:
         return PostgresSQLClient(admin_credentials, dbname)
-
 
 def _determine_sku(size_spec):
     warnings = []
