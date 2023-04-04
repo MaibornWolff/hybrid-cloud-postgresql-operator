@@ -198,6 +198,7 @@ spec:
       - name: foobar  # Name of the rule
         startIp: 1.2.3.4  # Start IP
         endIp: 1.2.3.4  # End IP
+  serverParameters: {} # Map of server parameters, optional
   maintenance:
     window:  # If the backend supports configuring a maintenance window it can be done here, optional
       weekday: Wed  # Weekday of the maintenace window. Must be provided as 3-letter english weekday name (Mon, Tue, Wed, Thu, Fri, Sat, Sun), required
