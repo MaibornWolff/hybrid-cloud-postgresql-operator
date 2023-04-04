@@ -17,6 +17,7 @@ PRELOAD_PARAMETER = "shared_preload_libraries"
 EXTENSIONS_PARAMETER = "azure.extensions"
 PRELOAD_LIST = ["timescaledb", "pg_cron", "pg_partman_bgw", "pg_partman", "pg_prewarm", "pg_stat_statements", "pgaudit", "pglogical", "wal2json"]
 
+IGNORE_RESET_PARAMETERS = [PRELOAD_PARAMETER, EXTENSIONS_PARAMETER]
 
 def _calc_name(namespace, name):
     # Allow admins to override names so that existing storage accounts not following the schema can still be managed
@@ -99,7 +100,7 @@ class AzurePostgreSQLFlexibleBackend:
         standby_availability_zone = config_get("backends.azurepostgresflexible.standby_availability_zone", default="2")
         high_availability = HighAvailability(mode=ha_enabled, standby_availability_zone=standby_availability_zone if ha_enabled=="ZoneRedundant" else None)
         tags = {"hybridcloud-postgresql-operator:namespace": namespace, "hybridcloud-postgresql-operator:name": name}
-        server_parameters = field_from_spec(spec, "serverParameters", default=[])
+        server_parameters = field_from_spec(spec, "serverParameters", default=dict())
         for k, v in _backend_config("tags", default={}).items():
             tags[k] = v.format(namespace=namespace, name=name)
 
@@ -224,11 +225,19 @@ class AzurePostgreSQLFlexibleBackend:
             poller = self._db_client.configurations.begin_put(self._resource_group, server_name, EXTENSIONS_PARAMETER, Configuration(value=",".join(extensions), source="user-override"))
             poller.result()
         
-        if server_parameters != []:
-            for parameter in server_parameters:
-                self._logger.info(f"Updating parameter from {parameter['name']} to {parameter['value']}")
-                poller = self._db_client.configurations.begin_put(self._resource_group, server_name, parameter["name"], Configuration(value=parameter["value"], source="user-override"))
-                poller.result()
+        for parameter in self._db_client.configurations.list_by_server(self._resource_group, server_name):
+            if parameter.name in IGNORE_RESET_PARAMETERS:
+                continue
+            if parameter.name in server_parameters:
+                if parameter.value != server_parameters[parameter.name]:
+                    self._logger.info(f"Updating parameter from {parameter.name} to {server_parameters[parameter.name]}")
+                    poller = self._db_client.configurations.begin_put(self._resource_group, server_name, parameter.name, Configuration(value=server_parameters[parameter.name], source="user-override"))
+                    poller.result()
+            else:
+                if parameter.value != parameter.default_value:
+                    self._logger.info(f"Resetting parameter from {parameter.name} to {parameter.default_value}")
+                    poller = self._db_client.configurations.begin_put(self._resource_group, server_name, parameter.name, Configuration(value=parameter.default_value, source="user-override"))
+                    poller.result()
 
         # Prepare credentials
         data = {
