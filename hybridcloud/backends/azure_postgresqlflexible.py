@@ -210,6 +210,7 @@ class AzurePostgreSQLFlexibleBackend:
         except ResourceNotFoundError:
             applied_allowed_extenions = []
         
+        # Keeps track of whether a restart is needed by changes to server configurations
         should_restart = False
 
         if preload_extensions != applied_preload_extensions:
@@ -225,19 +226,24 @@ class AzurePostgreSQLFlexibleBackend:
             poller.result()
             should_restart = True
         
+        # Iterate through the server properties that are currently set on the server
         for parameter in self._db_client.configurations.list_by_server(self._resource_group, server_name):
+            # Extensions which are set above are part of the server properties and shouldn't be reset
             if parameter.name in IGNORE_RESET_PARAMETERS:
                 continue
+            
             changed = False
             value = ""
 
-            # Only Update configuration if parameter changed or reset if parameter got removed
+            # Comparing target server properties to current ones
             if parameter.name in server_parameters:
+                # Update configuration if parameter changed
                 if parameter.value != server_parameters[parameter.name]:
                     self._logger.info(f"Updating parameter {parameter.name} to {server_parameters[parameter.name]}")
                     value = server_parameters[parameter.name]
                     changed = True
             else:
+                # Reset parameter if it got removed from config-file
                 if parameter.value != parameter.default_value:
                     self._logger.info(f"Resetting parameter {parameter.name} to {parameter.default_value}")
                     value = parameter.default_value
