@@ -99,6 +99,7 @@ class AzurePostgreSQLFlexibleBackend:
         standby_availability_zone = config_get("backends.azurepostgresflexible.standby_availability_zone", default="2")
         high_availability = HighAvailability(mode=ha_enabled, standby_availability_zone=standby_availability_zone if ha_enabled=="ZoneRedundant" else None)
         tags = {"hybridcloud-postgresql-operator:namespace": namespace, "hybridcloud-postgresql-operator:name": name}
+        server_parameters = field_from_spec(spec, "serverParameters", default=[])
         for k, v in _backend_config("tags", default={}).items():
             tags[k] = v.format(namespace=namespace, name=name)
 
@@ -223,6 +224,12 @@ class AzurePostgreSQLFlexibleBackend:
             poller = self._db_client.configurations.begin_put(self._resource_group, server_name, EXTENSIONS_PARAMETER, Configuration(value=",".join(extensions), source="user-override"))
             poller.result()
         
+        if server_parameters != []:
+            for parameter in server_parameters:
+                self._logger.info(f"Updating parameter from {parameter['name']} to {parameter['value']}")
+                poller = self._db_client.configurations.begin_put(self._resource_group, server_name, parameter["name"], Configuration(value=parameter["value"], source="user-override"))
+                poller.result()
+
         # Prepare credentials
         data = {
             "username": admin_username,

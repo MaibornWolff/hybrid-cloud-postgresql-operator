@@ -72,6 +72,15 @@ spec:
                           - name
                           - startIp
                           - endIp
+                serverParameters:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      value: 
+                        type: string
                 maintenance:
                   type: object
                   properties:
