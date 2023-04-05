@@ -198,6 +198,7 @@ spec:
       - name: foobar  # Name of the rule
         startIp: 1.2.3.4  # Start IP
         endIp: 1.2.3.4  # End IP
+  serverParameters: {} # Map of server parameters, optional
   maintenance:
     window:  # If the backend supports configuring a maintenance window it can be done here, optional
       weekday: Wed  # Weekday of the maintenace window. Must be provided as 3-letter english weekday name (Mon, Tue, Wed, Thu, Fri, Sat, Sun), required
@@ -238,7 +239,7 @@ To run it locally follow these steps:
 1. Create and activate a local python virtualenv
 2. Install dependencies: `pip install -r requirements.txt`
 3. Setup a local kubernetes cluster, e.g. with k3d: `k3d cluster create`
-4. Apply the CRDs in your local cluster: `kubectl apply -f helm/hybrid-cloud-postgresql-operator/crds/`
+4. Apply the CRDs in your local cluster: `kubectl apply -f helm/hybrid-cloud-postgresql-operator-crds/templates/`
 5. If you want to deploy to azure: Either have the azure cli installed and configured with an active login or export the following environment variables: `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`
 6. Adapt the `config.yaml` to suit your needs
 7. Run `kopf run main.py -A`

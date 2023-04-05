@@ -17,6 +17,7 @@ PRELOAD_PARAMETER = "shared_preload_libraries"
 EXTENSIONS_PARAMETER = "azure.extensions"
 PRELOAD_LIST = ["timescaledb", "pg_cron", "pg_partman_bgw", "pg_partman", "pg_prewarm", "pg_stat_statements", "pgaudit", "pglogical", "wal2json"]
 
+IGNORE_RESET_PARAMETERS = [PRELOAD_PARAMETER, EXTENSIONS_PARAMETER]
 
 def _calc_name(namespace, name):
     # Allow admins to override names so that existing storage accounts not following the schema can still be managed
@@ -99,6 +100,7 @@ class AzurePostgreSQLFlexibleBackend:
         standby_availability_zone = config_get("backends.azurepostgresflexible.standby_availability_zone", default="2")
         high_availability = HighAvailability(mode=ha_enabled, standby_availability_zone=standby_availability_zone if ha_enabled=="ZoneRedundant" else None)
         tags = {"hybridcloud-postgresql-operator:namespace": namespace, "hybridcloud-postgresql-operator:name": name}
+        server_parameters = field_from_spec(spec, "serverParameters", default=dict())
         for k, v in _backend_config("tags", default={}).items():
             tags[k] = v.format(namespace=namespace, name=name)
 
@@ -208,21 +210,57 @@ class AzurePostgreSQLFlexibleBackend:
         except ResourceNotFoundError:
             applied_allowed_extenions = []
         
+        # Keeps track of whether a restart is needed by changes to server configurations
+        should_restart = False
+
         if preload_extensions != applied_preload_extensions:
             self._logger.info(f"Updating list of extensions from {','.join(applied_preload_extensions)} to {','.join(extensions)}")
             # Update configuration
             poller = self._db_client.configurations.begin_put(self._resource_group, server_name, PRELOAD_PARAMETER, Configuration(value=",".join(extensions), source="user-override"))
             poller.result()
-            # Restart server
-            self._logger.info("Restarting server due to changed extensions preload configuration")
-            poller = self._db_client.servers.begin_restart(self._resource_group, server_name)
-            poller.result()
+            should_restart = True
         
         if extensions != applied_allowed_extenions:
             # Update configuration
             poller = self._db_client.configurations.begin_put(self._resource_group, server_name, EXTENSIONS_PARAMETER, Configuration(value=",".join(extensions), source="user-override"))
             poller.result()
+            should_restart = True
         
+        # Iterate through the server properties that are currently set on the server
+        for parameter in self._db_client.configurations.list_by_server(self._resource_group, server_name):
+            # Extensions which are set above are part of the server properties and shouldn't be reset
+            if parameter.name in IGNORE_RESET_PARAMETERS:
+                continue
+            
+            changed = False
+            value = ""
+
+            # Comparing target server properties to current ones
+            if parameter.name in server_parameters:
+                # Update configuration if parameter changed
+                if parameter.value != server_parameters[parameter.name]:
+                    self._logger.info(f"Updating parameter {parameter.name} to {server_parameters[parameter.name]}")
+                    value = server_parameters[parameter.name]
+                    changed = True
+            else:
+                # Reset parameter if it got removed from config-file
+                if parameter.value != parameter.default_value:
+                    self._logger.info(f"Resetting parameter {parameter.name} to {parameter.default_value}")
+                    value = parameter.default_value
+                    changed = True
+
+            if changed:
+                poller = self._db_client.configurations.begin_put(self._resource_group, server_name, parameter.name, Configuration(value=value, source="user-override"))
+                poller.result()
+                should_restart = True
+
+        if should_restart:
+            # Restart server
+            self._logger.info("Restarting server due to changed server parameters")
+            poller = self._db_client.servers.begin_restart(self._resource_group, server_name)
+            poller.result()
+            self._logger.info("Initiated server restart")
+
         # Prepare credentials
         data = {
             "username": admin_username,
@@ -297,7 +335,6 @@ class AzurePostgreSQLFlexibleBackend:
 
     def _pgclient(self, admin_credentials, dbname=None) -> PostgresSQLClient:
         return PostgresSQLClient(admin_credentials, dbname)
-
 
 def _determine_sku(size_spec):
     warnings = []

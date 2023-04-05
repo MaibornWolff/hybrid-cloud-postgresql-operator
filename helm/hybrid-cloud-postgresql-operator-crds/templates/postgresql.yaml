@@ -72,6 +72,10 @@ spec:
                           - name
                           - startIp
                           - endIp
+                serverParameters:
+                  type: object
+                  additionalProperties:
+                    type: string
                 maintenance:
                   type: object
                   properties:
