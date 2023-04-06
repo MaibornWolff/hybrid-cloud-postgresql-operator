@@ -276,16 +276,16 @@ class AzurePostgreSQLFlexibleBackend:
         server_name = _calc_name(namespace, server_name)
         try:
             database = self._db_client.databases.get(self._resource_group, server_name, database_name)
-            changed = database.charset != spec["database"].get("charset", "UTF8") or database.collation != spec["database"].get("collation", "en_US.utf8")
+            changed = database.charset != field_from_spec(spec, "database.charset", default="UTF8") or database.collation != field_from_spec(spec, "database.collation", default="en_US.utf8") 
         except:
             changed = True
         if changed:
-            parameters = Database(charset=spec["database"].get("charset", "UTF8"), collation=spec["database"].get("collation", "en_US.utf8"))
+            parameters = Database(charset=field_from_spec(spec, "database.charset", default="UTF8"), collation=field_from_spec(spec, "database.collation", default="en_US.utf8") )
             poller = self._db_client.databases.begin_create(self._resource_group, server_name, database_name, parameters)
             poller.result()
         pgclient = self._pgclient(admin_credentials, database_name)
         pgclient.restrict_database_permissions(database_name)
-        extensions = spec["database"].get("extensions", [])
+        extensions = field_from_spec(spec, "database.extensions", default=[])
         if not extensions:
             return
         for extension in extensions:

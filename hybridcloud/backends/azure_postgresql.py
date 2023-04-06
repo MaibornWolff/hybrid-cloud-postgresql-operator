@@ -268,12 +268,12 @@ class AzurePostgreSQLBackend:
 
     def create_or_update_database(self, namespace, server_name, database_name, spec, admin_credentials=None):
         server_name = _calc_name(namespace, server_name)
-        parameters = Database(charset=spec["database"].get("charset", "UTF8"), collation=spec["database"].get("collation", "English_United States.1252"))
+        parameters = Database(charset=field_from_spec(spec, "database.charset", default="UTF8"), collation=field_from_spec(spec, "database.collation", default="English_United States.1252"))
         poller = self._db_client.databases.begin_create_or_update(self._resource_group, server_name, database_name, parameters)
         poller.result()
         pgclient = self._pgclient(admin_credentials, database_name)
         pgclient.restrict_database_permissions(database_name)
-        extensions = spec["database"].get("extensions", [])
+        extensions = field_from_spec(spec, "database.extensions", default=[])
         if not extensions:
             return
         for extension in extensions:
