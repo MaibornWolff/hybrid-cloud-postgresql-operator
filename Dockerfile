@@ -3,7 +3,7 @@ FROM alpine:3.15 as build
 RUN wget -O - https://get.helm.sh/helm-v3.8.1-linux-amd64.tar.gz | tar -xzO linux-amd64/helm > /helm
 RUN chmod +x /helm \
     && /helm repo add bitnami https://charts.bitnami.com/bitnami \
-    && /helm pull bitnami/postgresql --untar --version 10.16.1 --destination /charts \
+    && /helm pull bitnami/postgresql --untar --version 11.9.13 --destination /charts \
     && /helm repo add yugabytedb https://charts.yugabyte.com \
     && /helm pull yugabytedb/yugabyte --untar --version 2.13.0 --destination /charts
 

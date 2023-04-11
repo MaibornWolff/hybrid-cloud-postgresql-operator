@@ -24,22 +24,23 @@ class HelmPostgreSQLBackend:
         server_name = f"{name}-postgresql"
         cpu, mem = _map_size(spec.get("size", dict()))
         disksize = spec.get("size", dict()).get("storageGB", "10")
-        admin_username = config_get("backends.helmbitnami.admin_username", default="postgres")
+        admin_username = "postgres"
         values = f"""
 fullnameOverride: {server_name}
 global:
   postgresql:
-    postgresqlUsername: "{admin_username}"
-    postgresqlPassword: "{password}"
-resources:
+    auth:
+      postgresPassword: "{password}"
+primary:
+  resources:
     limits:
-      memory: "{mem}"
-      cpu: "{cpu}"
+    memory: "{mem}"
+    cpu: "{cpu}"
     requests:
-      memory: "{mem}"
-      cpu: "{cpu}"
-persistence:
-  size: {disksize}Gi
+    memory: "{mem}"
+    cpu: "{cpu}"
+  persistence:
+    size: {disksize}Gi
         """
         helm.install_upgrade(namespace, server_name, os.path.join(HELM_BASE_PATH, "postgresql"), "--wait", values=values)
         return {
