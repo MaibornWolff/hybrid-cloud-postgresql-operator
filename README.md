@@ -92,7 +92,9 @@ backends:  # Configuration for the different backends. Required fields are only 
     default_class: dev  # Name of the class to use as default if the user-provided one is invalid or not available, required if classes should be usable
     availability_zone: "1"  # Availability zone to use for the database, required
     standby_availability_zone: "2"  # Standby availability zone to use for the database if the user enables high-avalability, optional
-    dns_zone: null  # Name of the private dns zone to use for vnet integration, optional
+    dns_zone:  # Settings for the private dns zone to use for vnet integration, optional
+      name: privatelink.postgres.database.azure.com # Name of the private dns zone, required
+      resource_group: foobar-rg # Resource group the private dns zone is part of, if omitted it defaults to the resource group the server resource group, optional
   helmbitnami:
     default_class: small  # Name of the class to use as default if the user-provided one is invalid or not available, required if classes should be usable
     classes:  # List of instance classes the user can select from, optional
@@ -142,8 +144,8 @@ For the flexible server (also see the [Azure Docs](https://docs.microsoft.com/en
 
 * You need an existing virtual network with a subnet
 * For the subnet enable the delegation to `Microsoft.DBforPostgreSQL/flexibleServers`
-* Create a private dns zone with a name that ends on `.postgres.database.azure.com` (e.g. `mydatabases.postgres.database.azure.com`)
-* Link the dns zone to your virtual network
+* Create a private dns zone with a name that ends on `.postgres.database.azure.com`, which can also be part of an other resource group (e.g. `mydatabases.postgres.database.azure.com`)
+* Link the dns zone to the virtual network the server is part of
 * In the operator config for the backend fill out the fields `virtual_network`, `subnet` and `dns_zone`
 
 For the operator to interact with Azure it needs credentials. For local testing it can pick up the token from the azure cli but for real deployments it needs a dedicated service principal. Supply the credentials for the service principal using the environment variables `AZURE_SUBSCRIPTION_ID`, `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` and `AZURE_CLIENT_SECRET` (if you deploy via the helm chart use the use `envSecret` value). Depending on the backend the operator requires the following azure permissions within the scope of the resource group it deploys to:
