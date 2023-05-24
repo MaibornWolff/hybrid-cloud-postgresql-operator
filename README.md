@@ -132,7 +132,7 @@ To make it easier for the users to specify database sizes you can prepare a list
 To protect database servers against accidential deletion you can enable `lock_from_deletion` in the azure backends. When enabled the operator will create a delete lock on the server resource in Azure. Note that the operator will not remove that lock when the server object in kubernetes is deleted, you have to do that yourself via either the Azure CLI or the Azure Portal so the operator can delete the server. If that is not done the kubernetes object cannot be deleted and any calls ala `kubectl delete` will hang until the lock is manually removed.
 The azure backends also support a feature called `fake deletion` (via options `server_delete_fake` and `database_delete_fake`) where the database or server are not actually deleted when the kubernetes custom object is deleted. This can be used in situations where the operator is freshly introduced in an environment where the users have little experience with this type of declarative management and you want to reduce the risk of accidental data loss.
 
-The azure backends support deploying the server in a way that it is only reachable from inside an azure virtual network. For the single server this is done using a private endpoint, for the flexible server via the vnet integration. Note that vnet integration in the operator has only been implemented as a prototype, it is not yet really usable. To enable the feature set `network.public_access` to false for the backend in the config. For `azurepostgres` you also need to enable `network.create_private_endpoint`. Additionally you need to prepare your Azure resource group:
+The azure backends support deploying the server in a way that it is only reachable from inside an azure virtual network. For the single server this is done using a private endpoint, for the flexible server via the vnet integration. To enable the feature set `network.public_access` to false for the backend in the config. For `azurepostgres` you also need to enable `network.create_private_endpoint`. For `azurepostgresflexible` you can't change the option after a server is created (see [Azure Docs](https://docs.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-networking)). Additionally you need to prepare your Azure resource group:
 
 For the single server:
 
@@ -144,7 +144,7 @@ For the flexible server (also see the [Azure Docs](https://docs.microsoft.com/en
 
 * You need an existing virtual network with a subnet
 * For the subnet enable the delegation to `Microsoft.DBforPostgreSQL/flexibleServers`
-* Create a private dns zone with a name that ends on `.postgres.database.azure.com`, which can also be part of an other resource group (e.g. `mydatabases.postgres.database.azure.com`)
+* You need a private dns zone with a name that ends on `.postgres.database.azure.com`, which can also be part of an other resource group (e.g. `mydatabases.postgres.database.azure.com`)
 * Link the dns zone to the virtual network the server is part of
 * In the operator config for the backend fill out the fields `virtual_network`, `subnet` and `dns_zone`
 
