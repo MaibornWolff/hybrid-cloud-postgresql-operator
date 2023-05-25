@@ -100,6 +100,7 @@ backends:  # Configuration for the different backends. Required fields are only 
         cpu: "1000m"   # CPU requests/limits for the pod, required
         memory: "256Mi"  # Memory requests/limits for the pod, required
     admin_username: postgres  # Username to use as admin user, optional
+    storage_class: ""  # Storage class to use for the pods, optional
     pvc_cleanup: false  # If set to true the operator will when deleting a server also delete the persistent volumes, optional
   helmyugabyte:
     default_class: small  # Name of the class to use as default if the user-provided one is invalid or not available, required if classes should be usable
@@ -184,7 +185,7 @@ spec:
   backend: azurepostgres  # Name of the backend to use, optional, should be left empty unless provided by the admin
   version: latest  # Version to use, can be a number like 11, 12, 13. If empty or `latest` the newest available version for that backend is used. If specified version is not available in backend default is used, optional
   size:
-    class: dev  # Ressource class to use, available classes are specified by the operator admin. if this is specified cpu and memoryMB are ignored. Use only if told to by admin.
+    class: dev  # Resource class to use, available classes are specified by the operator admin. if this is specified cpu and memoryMB are ignored. Use only if told to by admin.
     cpu: 1  # Number of CPU cores to use, optional
     memoryMB: 512  # Memory to use in MB, optional
     storageGB: 32  # Size of the storage for the database in GB, required
@@ -201,7 +202,7 @@ spec:
   serverParameters: {} # Map of server parameters, optional
   maintenance:
     window:  # If the backend supports configuring a maintenance window it can be done here, optional
-      weekday: Wed  # Weekday of the maintenace window. Must be provided as 3-letter english weekday name (Mon, Tue, Wed, Thu, Fri, Sat, Sun), required
+      weekday: Wed  # Weekday of the maintenance window. Must be provided as 3-letter english weekday name (Mon, Tue, Wed, Thu, Fri, Sat, Sun), required
       starttime: 03:00  # Start time as hour:minute, required
   highavailability:
     enabled: false  # If the backend supports it high availability (via several instances) can be enabled here, optional
