@@ -40,7 +40,8 @@ class AzurePostgreSQLFlexibleBackend:
         self._resource_group = _backend_config("resource_group", fail_if_missing=True)
         self._virtual_network = _backend_config("virtual_network")
         self._subnet = _backend_config("subnet")
-        self._private_dns_zone = _backend_config("dns_zone")
+        self._private_dns_zone = _backend_config("dns_zone.name", default=_backend_config("dns_zone"))
+        self._private_dns_zone_resource_group = _backend_config("dns_zone.resource_group", default=self._resource_group)
         self._logger = logger
 
     def server_spec_valid(self, namespace, name, spec):
@@ -89,7 +90,7 @@ class AzurePostgreSQLFlexibleBackend:
             network = None
         else:
             subnet_id = f"/subscriptions/{self._subscription_id}/resourceGroups/{self._resource_group}/providers/Microsoft.Network/virtualNetworks/{self._virtual_network}/subnets/{self._subnet}"
-            zone_id = f"/subscriptions/{self._subscription_id}/resourceGroups/{self._resource_group}/providers/Microsoft.Network/privateDnsZones/{self._private_dns_zone}"
+            zone_id = f"/subscriptions/{self._subscription_id}/resourceGroups/{self._private_dns_zone_resource_group}/providers/Microsoft.Network/privateDnsZones/{self._private_dns_zone}"
             network = Network(delegated_subnet_resource_id=subnet_id, private_dns_zone_arm_resource_id=zone_id)
         backup_retention_days = field_from_spec(spec, "backup.retentionDays", default=_backend_config("parameters.backup_retention_days", default=7))
         backup = Backup(backup_retention_days=backup_retention_days, geo_redundant_backup=geo_redundant_backup)

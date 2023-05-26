@@ -92,7 +92,9 @@ backends:  # Configuration for the different backends. Required fields are only 
     default_class: dev  # Name of the class to use as default if the user-provided one is invalid or not available, required if classes should be usable
     availability_zone: "1"  # Availability zone to use for the database, required
     standby_availability_zone: "2"  # Standby availability zone to use for the database if the user enables high-avalability, optional
-    dns_zone: null  # Name of the private dns zone to use for vnet integration, optional
+    dns_zone:  # Settings for the private dns zone to use for vnet integration. If the private dns zone is in the same resource group as the server, the fields "name" and resource_group can be omitted and the name can be placed here, optional
+      name: privatelink.postgres.database.azure.com # Name of the private dns zone, optional
+      resource_group: foobar-rg # Resource group the private dns zone is part of, if omitted it defaults to the resource group the server resource group, optional
   helmbitnami:
     default_class: small  # Name of the class to use as default if the user-provided one is invalid or not available, required if classes should be usable
     classes:  # List of instance classes the user can select from, optional
@@ -131,7 +133,7 @@ To make it easier for the users to specify database sizes you can prepare a list
 To protect database servers against accidential deletion you can enable `lock_from_deletion` in the azure backends. When enabled the operator will create a delete lock on the server resource in Azure. Note that the operator will not remove that lock when the server object in kubernetes is deleted, you have to do that yourself via either the Azure CLI or the Azure Portal so the operator can delete the server. If that is not done the kubernetes object cannot be deleted and any calls ala `kubectl delete` will hang until the lock is manually removed.
 The azure backends also support a feature called `fake deletion` (via options `server_delete_fake` and `database_delete_fake`) where the database or server are not actually deleted when the kubernetes custom object is deleted. This can be used in situations where the operator is freshly introduced in an environment where the users have little experience with this type of declarative management and you want to reduce the risk of accidental data loss.
 
-The azure backends support deploying the server in a way that it is only reachable from inside an azure virtual network. For the single server this is done using a private endpoint, for the flexible server via the vnet integration. Note that vnet integration in the operator has only been implemented as a prototype, it is not yet really usable. To enable the feature set `network.public_access` to false for the backend in the config. For `azurepostgres` you also need to enable `network.create_private_endpoint`. Additionally you need to prepare your Azure resource group:
+The azure backends support deploying the server in a way that it is only reachable from inside an azure virtual network. For the single server this is done using a private endpoint, for the flexible server via the vnet integration. To enable the feature set `network.public_access` to false for the backend in the config. For `azurepostgres` you also need to enable `network.create_private_endpoint`. For `azurepostgresflexible` you can't change the option after a server is created (see [Azure Docs](https://docs.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-networking)). Additionally you need to prepare your Azure resource group:
 
 For the single server:
 
@@ -143,8 +145,8 @@ For the flexible server (also see the [Azure Docs](https://docs.microsoft.com/en
 
 * You need an existing virtual network with a subnet
 * For the subnet enable the delegation to `Microsoft.DBforPostgreSQL/flexibleServers`
-* Create a private dns zone with a name that ends on `.postgres.database.azure.com` (e.g. `mydatabases.postgres.database.azure.com`)
-* Link the dns zone to your virtual network
+* You need a private dns zone with a name that ends on `.postgres.database.azure.com`, which can also be part of an other resource group (e.g. `mydatabases.postgres.database.azure.com`)
+* Link the dns zone to the virtual network the server is part of
 * In the operator config for the backend fill out the fields `virtual_network`, `subnet` and `dns_zone`
 
 For the operator to interact with Azure it needs credentials. For local testing it can pick up the token from the azure cli but for real deployments it needs a dedicated service principal. Supply the credentials for the service principal using the environment variables `AZURE_SUBSCRIPTION_ID`, `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` and `AZURE_CLIENT_SECRET` (if you deploy via the helm chart use the use `envSecret` value). Depending on the backend the operator requires the following azure permissions within the scope of the resource group it deploys to:
