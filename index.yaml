@@ -3,6 +3,16 @@ entries:
   hybrid-cloud-postgresql-operator:
   - apiVersion: v2
     appVersion: 0.1.0
+    created: "2023-05-26T06:31:28.497531975Z"
+    description: Installs the hybrid-cloud-postgresql-operator
+    digest: 043dafc406b3a1908b3029ae3578af33233ed715758a750ee53d931dedb77544
+    name: hybrid-cloud-postgresql-operator
+    type: application
+    urls:
+    - https://MaibornWolff.github.io/hybrid-cloud-postgresql-operator/hybrid-cloud-postgresql-operator-0.3.1.tgz
+    version: 0.3.1
+  - apiVersion: v2
+    appVersion: 0.1.0
     created: "2023-04-11T13:12:16.863177615Z"
     description: Installs the hybrid-cloud-postgresql-operator
     digest: c5cdd69b6b42342eb42a00131ebd7153b96906b7b82fae36e9148c7ac29d92e9
@@ -44,6 +54,16 @@ entries:
   hybrid-cloud-postgresql-operator-crds:
   - apiVersion: v2
     appVersion: 0.1.0
+    created: "2023-05-26T06:31:28.498009481Z"
+    description: Installs the CRDs for the hybrid-cloud-postgresql-operator
+    digest: 503689e14be36ad2d3d1507c1e278105b27e2722ad43f5d87ba860505f10c98a
+    name: hybrid-cloud-postgresql-operator-crds
+    type: application
+    urls:
+    - https://MaibornWolff.github.io/hybrid-cloud-postgresql-operator/hybrid-cloud-postgresql-operator-crds-0.3.1.tgz
+    version: 0.3.1
+  - apiVersion: v2
+    appVersion: 0.1.0
     created: "2023-04-11T13:12:16.863378816Z"
     description: Installs the CRDs for the hybrid-cloud-postgresql-operator
     digest: 5dc4c37377d93b72a0d2528684b9fbece68571dbd773525e5146b2a2f7073488
@@ -72,4 +92,4 @@ entries:
     urls:
     - https://MaibornWolff.github.io/hybrid-cloud-postgresql-operator/hybrid-cloud-postgresql-operator-crds-0.2.0.tgz
     version: 0.2.0
-generated: "2023-04-11T13:12:16.862421312Z"
+generated: "2023-05-26T06:31:28.495834754Z"
