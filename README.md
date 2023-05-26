@@ -92,8 +92,8 @@ backends:  # Configuration for the different backends. Required fields are only 
     default_class: dev  # Name of the class to use as default if the user-provided one is invalid or not available, required if classes should be usable
     availability_zone: "1"  # Availability zone to use for the database, required
     standby_availability_zone: "2"  # Standby availability zone to use for the database if the user enables high-avalability, optional
-    dns_zone:  # Settings for the private dns zone to use for vnet integration, optional
-      name: privatelink.postgres.database.azure.com # Name of the private dns zone, required
+    dns_zone:  # Settings for the private dns zone to use for vnet integration. If the private dns zone is in the same resource group as the server, the fields "name" and resource_group can be omitted and the name can be placed here, optional
+      name: privatelink.postgres.database.azure.com # Name of the private dns zone, optional
       resource_group: foobar-rg # Resource group the private dns zone is part of, if omitted it defaults to the resource group the server resource group, optional
   helmbitnami:
     default_class: small  # Name of the class to use as default if the user-provided one is invalid or not available, required if classes should be usable
