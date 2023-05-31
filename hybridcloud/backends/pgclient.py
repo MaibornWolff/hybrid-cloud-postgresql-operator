@@ -42,6 +42,8 @@ class PostgresSQLClient:
         if user_missing:
             cursor.execute("CREATE ROLE %s WITH LOGIN ENCRYPTED PASSWORD %s", (AsIs(name), password))
         cursor.execute("GRANT ALL PRIVILEGES ON DATABASE %s TO %s", (AsIs(database), AsIs(name)))
+        # Needed on AWS RDS
+        cursor.execute("GRANT ALL PRIVILEGES ON SCHEMA public TO %s", (AsIs(name),))
         cursor.close()
         return user_missing
     

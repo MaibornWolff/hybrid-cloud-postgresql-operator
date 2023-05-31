@@ -13,12 +13,14 @@ Main features:
 * Currently supported backends:
   * Azure Database for PostgreSQL single server
   * Azure Database for PostgreSQL flexible server
+  * AWS RDS Postgres
+  * AWS RDS Aurora
   * [bitnami](https://charts.bitnami.com/bitnami) [helm chart](https://github.com/bitnami/charts/tree/master/bitnami/postgresql/) (prototype)
   * [Yugabyte](https://docs.yugabyte.com/preview/deploy/kubernetes/single-zone/oss/helm-chart/) helm chart deployment (prototype, due to limitations in the chart only one cluster per namespace is possible)
 
 ## Quickstart
 
-To test out the operator you do not need Azure, you just need a kubernetes cluster (you can for example create a local one with [k3d](https://k3d.io/)) and cluster-admin rights on it.
+To test out the operator you do not need Azure or AWS, you just need a kubernetes cluster (you can for example create a local one with [k3d](https://k3d.io/)) and cluster-admin rights on it.
 
 1. Run `helm repo add maibornwolff https://maibornwolff.github.io/hybrid-cloud-postgresql-operator/` to prepare the helm repository.
 2. Run `helm install hybrid-cloud-postgresql-operator-crds maibornwolff/hybrid-cloud-postgresql-operator-crds` and `helm install hybrid-cloud-postgresql-operator maibornwolff/hybrid-cloud-postgresql-operator` to install the operator.
@@ -95,6 +97,34 @@ backends:  # Configuration for the different backends. Required fields are only 
     dns_zone:  # Settings for the private dns zone to use for vnet integration. If the private dns zone is in the same resource group as the server, the fields "name" and resource_group can be omitted and the name can be placed here, optional
       name: privatelink.postgres.database.azure.com # Name of the private dns zone, optional
       resource_group: foobar-rg # Resource group the private dns zone is part of, if omitted it defaults to the resource group the server resource group, optional
+  aws: # This is a virtual backend that can be used to configure both awsrds and awsaurora. Fields defined here can also be defined directly in the other backends
+    region: eu-central-1 # AWS region to use, required
+    vpc_security_group_ids: [] # List of VPC security group IDs to assign to instances, required
+    subnet_group: # The name of a DB subnet group to place instances in, required
+    deletion_protection: false # Configure deletion protection for instances, will prevent instances being deleted by the operator, optional
+    network:
+      public_access: false # Allow public access from outside the VPC for the instance (security groups still need to be configured), optional
+    admin_username: postgres  # Username to use as admin user, optional
+    name_pattern: "{namespace}-{name}"  # Pattern to use for naming instances in AWS. Variables {namespace} and {name} can be used and will be replaced by metadata.namespace and metadata.name of the custom object
+  awsrds:
+    availability_zone: eu-central-1a # Availability zone to place DB instances in, required
+    default_class: small  # Name of the class to use as default if the user-provided one is invalid or not available, required
+    classes:  # List of instance classes the user can select from, required
+      small:  # Name of the class
+        instance_type: db.m5.large # EC2 Instance type to use, required
+        storage_type: gp2 # Storage type for the DB instance, currently gp2, gp3 or io1, optional
+        iops: 0 # Only needed when storage_type == gp3 or io1, number of IOPS to provision for the storage, optional
+  awsaurora:
+    availability_zones: [] # List of availability zones to place DB instances in, optional
+    default_class: small  # Name of the class to use as default if the user-provided one is invalid or not available, required
+    classes:  # List of instance classes the user can select from, required
+      small:  # Name of the class
+        instance_type: db.serverless # EC2 Instance type to use, use db.serverless for an Aurora v2 serverless cluster, required
+        scaling_configuration: # Needs to be configured for serverless cluster only, optional
+          min_capacity: 0.5 # Minimal number of capacity units, required
+          max_capacity: 1 # Maximum number of capacity units, required
+        storage_type: aurora # Storage type for the DB instance, currently aurora and aurora-iopt1 are allowed, optional
+        iops: 0 # Only needed when storage_type == aurora-iopt1, number of IOPS to provision for the storage, optional
   helmbitnami:
     default_class: small  # Name of the class to use as default if the user-provided one is invalid or not available, required if classes should be usable
     classes:  # List of instance classes the user can select from, optional
@@ -126,6 +156,8 @@ security: # Security-related settings independent of any backends, optional
 
 Single configuration options can also be provided via environment variables, the complete path is concatenated using underscores, written in uppercase and prefixed with `HYBRIDCLOUD_`. As an example: `backends.azure.subscription_id` becomes `HYBRIDCLOUD_BACKENDS_AZURE_SUBSCRIPTION_ID`.
 
+### Azure
+
 The `azure` backend is a virtual backend that allows you to specify options that are the same for both `azurepostgres` and `azurepostgresflexible`. As such each option under `backends.azure` in the above configuration can be repeated in the `backends.azurepostgres` and `backends.azurepostgresflexible` sections. Note that currrently the operator cannot handle using different subscriptions for the backends.
 
 To make it easier for the users to specify database sizes you can prepare a list of recommendations, called classes, the users can choose from. The fields of the classes are backend-dependent. Using this mechanism you can give the users classes like `small`, `production`, `production-ha` and size them appropriately for each backend. If the user specifies size using CPU and memory the backend will pick an appropriate match.
@@ -156,6 +188,50 @@ For the operator to interact with Azure it needs credentials. For local testing 
 * `Microsoft.Authorization/locks/*`, optional, if you want the operator to set delete locks
 
 Unfortunately there is no built-in azure role for the Database for PostgreSQL service, if you do not want to create a custom role you can also assign the operator the Contributor or Owner (if lock handling is required) roles, but beware this is a potential attack surface as someone compromising the operator can access your entire Azure account.
+
+### AWS
+
+The `awsrds` backend supports single-instance RDS Postgresql deployments. The `awsaurora` backend supports single-instance aurora clusters (the operator currently only creates a primary writer instance and no read replicas). The `aws` backend is a virtual backend that allows you to specify options that are the same for both `awsrds` and `awsaurora`.
+
+Both AWS backends have some prerequisites:
+
+* An existing VPC
+* Existing VPC Security groups to control access to the RDS instances (the firewall options currently have no effect)
+* An existing DB subnet group
+* Some defined size classes (in the operator configuration) as specifying a size using CPU and memory is currently not implemented for AWS
+
+For the operator to interact with AWS it needs credentials. For local testing it can pick up the credentials from a `~/.aws/credentials` file. For real deployments you need an IAM user. The IAM user needs full RDS permissions (the easiest way is to attach the `AmazonRDSFullAccess` policy to the user). Supply the credentials for the user using the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` (if you deploy via the helm chart use the use `envSecret` value). The operator can also pick up credentials using [IAM instance roles](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html) if they are configured.
+
+The AWS backends currently have some limitations:
+
+* No support for managing firewalls / IP whitelists (must be done via preprovided VPC security groups)
+* No support for HA or Multi-AZ clusters
+* No support for custom parameter or option groups
+* No support for storage autoscaling or configuring storage througput (for gp3)
+* No support for Extended monitoring / performance insights
+* No support for Aurora serverless v1
+
+To get started with AWS you can use the following minimal operator config:
+
+```yaml
+handler_on_resume: false
+backend: awsrds
+allowed_backends: 
+  - awsrds
+backends:
+  awsrds:
+    name_pattern: "{namespace}-{name}"
+    region: eu-central-1
+    availability_zone: "eu-central-1c"
+    subnet_group: "<db-subnet-group>" # You must create it
+    vpc_security_group_ids: ["<security-group-id>"] # You must create it
+    network:
+      public_access: true
+    classes:
+      small:
+        instance_type: db.m5.large
+    default_class: small
+```
 
 ### Deployment
 
@@ -193,7 +269,7 @@ spec:
     storageGB: 32  # Size of the storage for the database in GB, required
     storageAutoGrow: false  # If the backend supports it automatic growing of the storage can be enabled, optional
   backup:  # If the backend supports automatic backup it can be configured here, optional
-    retentionDays: 7  # Number of days backups should be retained. Min and max are dependent on the backend (for azure 7-35 days), optional
+    retentionDays: 7  # Number of days backups should be retained. Min and max are dependent on the backend (for azure 7-35 days, for AWS 0 disables backups), optional
     geoRedundant: false  # If the backend supports it the backups can be stored geo-redundant in more than one region, optional
   extensions: [] # List of postgres extensions to install in the database. List is dependent on the backend (e.g. azure supports timescaledb). Currently only supported with azure backends. optional. 
   network:  # Network related features, optional
@@ -233,6 +309,10 @@ It is recommended not to use the system database (`postgres`) for anything but i
 
 A service/application that wants to access the database should depend on the credentials secret and use its values for the connection. That way it is independent of the actual backend. Provided keys in the secret are: `hostname`, `port`, `dbname`, `username`, `password`, `sslmode` and should be directly usable with any postgresql-compatible client library.
 
+### Resetting passwords
+
+The operator has support for resetting the password of a server or database (for example if the passwords has been compromised or your organization requires regular password changes). To initiate a reset just add a label `operator/action: reset-password` to the custom resource (for example with `kubectl label postgresqldatabase mydatabase operator/action=reset-password`). The operator will pick it up, generate a new password, set it for the server/database and then update the credentials secret. It will then remove the label to signal completion. Note that you are responsible for restarting any affected services that use the password.
+
 ## Development
 
 The operator is implemented in Python using the [Kopf](https://github.com/nolar/kopf) ([docs](https://kopf.readthedocs.io/en/stable/)) framework.
@@ -243,7 +323,9 @@ To run it locally follow these steps:
 2. Install dependencies: `pip install -r requirements.txt`
 3. Setup a local kubernetes cluster, e.g. with k3d: `k3d cluster create`
 4. Apply the CRDs in your local cluster: `kubectl apply -f helm/hybrid-cloud-postgresql-operator-crds/templates/`
-5. If you want to deploy to azure: Either have the azure cli installed and configured with an active login or export the following environment variables: `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`
+5. If you want to deploy to the cloud:
+   * For Azure: Either have the azure cli installed and configured with an active login or export the following environment variables: `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`
+   * For AWS: Either have a local `~/.aws/credentials` or export the following environment variables: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
 6. Adapt the `config.yaml` to suit your needs
 7. Run `kopf run main.py -A`
 8. In another window apply some objects to the cluster to trigger the operator (see the `examples` folder)

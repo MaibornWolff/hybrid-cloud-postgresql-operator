@@ -60,7 +60,7 @@ def postgresql_server_handler(body, spec, status, meta, labels, name, namespace,
     # create server
     connection_data, warnings = backend.create_or_update_server(namespace, name, spec, password, admin_password_changed=not credentials_secret)
     for warning in warnings:
-        kopf.warn(body, reason="AzureWarning", message=warning)
+        kopf.warn(body, reason="CloudProviderWarning", message=warning)
     logger.info("Created/updated server. Creating credentials secret")
 
     # store credentials in final secret
