@@ -7,4 +7,4 @@ psycopg2-binary==2.9.6
 azure-mgmt-privatedns==1.1.0
 azure-mgmt-network==23.1.0
 pyyaml==6.0
-boto3==1.26.142
+boto3==1.26.146
