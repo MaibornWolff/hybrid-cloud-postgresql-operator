@@ -3,5 +3,9 @@
   "extends": [
     "group:all", ":disableDependencyDashboard", "workarounds:all", ":ignoreModulesAndTests", ":autodetectPinVersions"
   ],
-  "enabledManagers": ["pip_requirements"]
+  "enabledManagers": ["pip_requirements"],
+  "timezone": "Europe/Berlin",
+  "schedule": [
+    "before 1pm on the first day of the month"
+  ]
 }
