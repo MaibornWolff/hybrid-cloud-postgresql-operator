@@ -13,7 +13,7 @@ Main features:
 * Currently supported backends:
   * Azure Database for PostgreSQL single server
   * Azure Database for PostgreSQL flexible server
-  * AWS RDS Postgres
+  * AWS RDS PostgreSQL
   * AWS RDS Aurora
   * [bitnami](https://charts.bitnami.com/bitnami) [helm chart](https://github.com/bitnami/charts/tree/master/bitnami/postgresql/) (prototype)
   * [Yugabyte](https://docs.yugabyte.com/preview/deploy/kubernetes/single-zone/oss/helm-chart/) helm chart deployment (prototype, due to limitations in the chart only one cluster per namespace is possible)
@@ -99,13 +99,14 @@ backends:  # Configuration for the different backends. Required fields are only 
       resource_group: foobar-rg # Resource group the private dns zone is part of, if omitted it defaults to the resource group the server resource group, optional
   aws: # This is a virtual backend that can be used to configure both awsrds and awsaurora. Fields defined here can also be defined directly in the other backends
     region: eu-central-1 # AWS region to use, required
-    vpc_security_group_ids: [] # List of VPC security group IDs to assign to instances, required
+    vpc_security_group_ids: [] # List of VPC security group IDs to assign to DB cluster instances, required
     subnet_group: # The name of a DB subnet group to place instances in, required
     deletion_protection: false # Configure deletion protection for instances, will prevent instances being deleted by the operator, optional
     network:
       public_access: false # Allow public access from outside the VPC for the instance (security groups still need to be configured), optional
     admin_username: postgres  # Username to use as admin user, optional
     name_pattern: "{namespace}-{name}"  # Pattern to use for naming instances in AWS. Variables {namespace} and {name} can be used and will be replaced by metadata.namespace and metadata.name of the custom object
+    tags: {}  # Extra tags to add to the server object in AWS, {namespace} and {name} can be used as variables, optional
   awsrds:
     availability_zone: eu-central-1a # Availability zone to place DB instances in, required
     default_class: small  # Name of the class to use as default if the user-provided one is invalid or not available, required
@@ -196,7 +197,7 @@ The `awsrds` backend supports single-instance RDS Postgresql deployments. The `a
 Both AWS backends have some prerequisites:
 
 * An existing VPC
-* Existing VPC Security groups to control access to the RDS instances (the firewall options currently have no effect)
+* An existing VPC Security group (to be applied to the DB cluster) to control access to the RDS instances (the firewall options currently have no effect)
 * An existing DB subnet group
 * Some defined size classes (in the operator configuration) as specifying a size using CPU and memory is currently not implemented for AWS
 
@@ -207,7 +208,7 @@ The AWS backends currently have some limitations:
 * No support for managing firewalls / IP whitelists (must be done via preprovided VPC security groups)
 * No support for HA or Multi-AZ clusters
 * No support for custom parameter or option groups
-* No support for storage autoscaling or configuring storage througput (for gp3)
+* No support for storage autoscaling or configuring storage throughput (for gp3)
 * No support for Extended monitoring / performance insights
 * No support for Aurora serverless v1
 
@@ -347,4 +348,4 @@ sshuttle --dns -r kuttle -e kuttle <internal-ip-range-of-your-cluster>
 
 * Kopf marks every object it manages with a finalizer, that means that if the operator is down or doesn't work a `kubectl delete` will hang. To work around that edit the object in question (`kubectl edit <type> <name>`) and remove the finalizer from the metadata. After that you can normally delete the object. Note that in this case the operator will not take care of cleaning up any azure resources.
 * If the operator encounters an exception while processing an event in a handler, the handler will be retried after a short back-off time. During the development you can then stop the operator, make changes to the code and start the operator again. Kopf will pick up again and rerun the failed handler.
-* When a handler was successfull but you still want to rerun it you need to fake a change in the object being handled. The easiest is adding or changing a label.
+* When a handler was successful, but you still want to rerun it you need to fake a change in the object being handled. The easiest is adding or changing a label.
