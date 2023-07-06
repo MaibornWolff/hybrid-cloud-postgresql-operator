@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import kopf
 from .routing import postgres_backend
 from ..config import config_get
@@ -106,7 +107,8 @@ def _status(name, namespace, status_obj, status, reason=None, backend=None):
         status_obj["backend"] = backend
     status_obj["deployment"] = {
         "status": status,
-        "reason": reason
+        "reason": reason,
+        "latest-update": datetime.now(tz=timezone.utc).isoformat()
     }
     k8s.patch_custom_object_status(k8s.PostgreSQLDatabase, namespace, name, status_obj)
 

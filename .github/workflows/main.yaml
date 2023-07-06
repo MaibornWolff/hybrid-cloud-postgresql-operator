@@ -33,9 +33,10 @@ jobs:
         run: |
           VERSION=${GITHUB_REF//refs\/tags\/v}
           sed -i 's/0.0.1/'"${VERSION}"'/' helm/hybrid-cloud-postgresql-operator/Chart.yaml
+          sed -i 's/0.1.0/'"${VERSION}"'/' helm/hybrid-cloud-postgresql-operator/Chart.yaml
           sed -i 's/dev/'"${VERSION}"'/' helm/hybrid-cloud-postgresql-operator/values.yaml
           sed -i 's/0.0.1/'"${VERSION}"'/' helm/hybrid-cloud-postgresql-operator-crds/Chart.yaml
-          sed -i 's/dev/'"${VERSION}"'/' helm/hybrid-cloud-postgresql-operator-crds/values.yaml
+          sed -i 's/0.1.0/'"${VERSION}"'/' helm/hybrid-cloud-postgresql-operator-crds/Chart.yaml
 
       - name: Publish helm chart
         uses: stefanprodan/helm-gh-pages@master
