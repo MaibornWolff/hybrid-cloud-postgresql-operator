@@ -1,11 +1,10 @@
-from logging import warning
 from azure.core.exceptions import ResourceNotFoundError
-from azure.mgmt.rdbms.postgresql.models import ServerForCreate, ServerPropertiesForDefaultCreate, ServerUpdateParameters, ServerVersion, Sku, StorageProfile, Database, Configuration, VirtualNetworkRule, FirewallRule
 from azure.mgmt.network.models import PrivateEndpoint, Subnet, PrivateLinkServiceConnection
+from azure.mgmt.rdbms.postgresql.models import ServerForCreate, ServerPropertiesForDefaultCreate, ServerUpdateParameters, ServerVersion, Sku, StorageProfile, Database, Configuration, VirtualNetworkRule, FirewallRule
 from azure.mgmt.resource.locks.models import ManagementLockObject
 from .pgclient import PostgresSQLClient
-from ..util.azure import azure_client_locks, azure_client_postgres, azure_client_network, azure_client_privatedns
 from ..config import get_one_of, config_get
+from ..util.azure import azure_client_locks, azure_client_postgres, azure_client_network, azure_client_privatedns
 from ..util.reconcile_helpers import field_from_spec
 
 

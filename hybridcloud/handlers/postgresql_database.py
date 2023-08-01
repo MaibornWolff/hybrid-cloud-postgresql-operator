@@ -2,11 +2,10 @@ from datetime import datetime, timezone
 import kopf
 from .routing import postgres_backend
 from ..config import config_get
+from ..util import env, k8s
+from ..util.constants import BACKOFF
 from ..util.password import generate_password
 from ..util.reconcile_helpers import process_action_label, ignore_control_label_change, determine_resource_password, shorten
-from ..util import k8s
-from ..util import env
-from ..util.constants import BACKOFF
 
 
 def _tmp_secret(namespace, name):

@@ -4,3 +4,5 @@ description: Installs the CRDs for the hybrid-cloud-postgresql-operator
 type: application
 version: 0.0.1
 appVersion: "0.1.0"
+sources:
+  - https://github.com/MaibornWolff/hybrid-cloud-postgresql-operator

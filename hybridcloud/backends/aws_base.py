@@ -1,5 +1,3 @@
-import time
-import kopf
 from .pgclient import PostgresSQLClient
 from ..util.aws import aws_client_rds
 from ..util.reconcile_helpers import field_from_spec
@@ -51,6 +49,7 @@ class AwsBackendBase:
 
 
 weekdays = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
 
 def calculate_maintenance_window(spec):
     # ddd:hh24:mi-ddd:hh24:mi

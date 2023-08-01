@@ -1,7 +1,6 @@
 import time
 import kopf
 from .aws_base import AwsBackendBase, calculate_maintenance_window
-from .pgclient import PostgresSQLClient
 from ..config import get_one_of, config_get
 from ..util.reconcile_helpers import field_from_spec
 
