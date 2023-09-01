@@ -1,10 +1,10 @@
 kubernetes==27.2.0
 kopf==1.36.2
 azure-mgmt-rdbms==10.1.0
-azure-identity==1.13.0
+azure-identity==1.14.0
 azure-mgmt-resource==23.0.1
-psycopg2-binary==2.9.6
+psycopg2-binary==2.9.7
 azure-mgmt-privatedns==1.1.0
-azure-mgmt-network==24.0.0
+azure-mgmt-network==25.0.0
 pyyaml==6.0.1
-boto3==1.28.16
+boto3==1.28.39
