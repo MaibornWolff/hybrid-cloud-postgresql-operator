@@ -1,6 +1,6 @@
 kubernetes==26.1.0
 kopf==1.36.0
-azure-mgmt-rdbms==10.1.0
+azure-mgmt-rdbms==10.2.0b10
 azure-identity==1.12.0
 azure-mgmt-resource==23.0.0
 psycopg2-binary==2.9.6
