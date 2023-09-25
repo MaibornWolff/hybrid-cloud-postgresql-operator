@@ -243,6 +243,12 @@ class AzurePostgreSQLFlexibleBackend:
                     self._logger.info(f"Updating parameter {parameter.name} to {server_parameters[parameter.name]}")
                     value = server_parameters[parameter.name]
                     changed = True
+            else:
+                # Reset parameter if it got removed from config-file
+                if parameter.value != parameter.default_value:
+                    self._logger.info(f"Resetting parameter {parameter.name} to {parameter.default_value}")
+                    value = parameter.default_value
+                    changed = True
 
             if changed:
                 poller = self._db_client.configurations.begin_put(self._resource_group, server_name, parameter.name, Configuration(value=value, source="user-override"))
