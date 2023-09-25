@@ -1,4 +1,4 @@
-FROM alpine:3.15 as build
+FROM alpine:3.18 as build
 # Download helm binary and charts, use extra stage to keep final image small
 RUN wget -O - https://get.helm.sh/helm-v3.8.1-linux-amd64.tar.gz | tar -xzO linux-amd64/helm > /helm
 RUN chmod +x /helm \

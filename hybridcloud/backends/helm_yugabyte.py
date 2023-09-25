@@ -1,8 +1,7 @@
 import os
 from .pgclient import PostgresSQLClient
 from ..config import config_get
-from ..util import helm
-from ..util import k8s
+from ..util import helm, k8s
 from ..util.constants import HELM_BASE_PATH
 
 

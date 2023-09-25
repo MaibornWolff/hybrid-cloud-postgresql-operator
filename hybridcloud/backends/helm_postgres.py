@@ -1,8 +1,7 @@
 import os
 from .pgclient import PostgresSQLClient
 from ..config import config_get
-from ..util import helm
-from ..util import k8s
+from ..util import helm, k8s
 from ..util.constants import HELM_BASE_PATH
 
 
@@ -24,21 +23,23 @@ class HelmPostgreSQLBackend:
         server_name = f"{name}-postgresql"
         cpu, mem = _map_size(spec.get("size", dict()))
         disksize = spec.get("size", dict()).get("storageGB", "10")
+        storage_class = config_get("backends.helmbitnami.storage_class", default="")
         admin_username = "postgres"
         values = f"""
 fullnameOverride: {server_name}
 global:
+  storageClass: "{storage_class}"
   postgresql:
     auth:
       postgresPassword: "{password}"
 primary:
   resources:
     limits:
-    memory: "{mem}"
-    cpu: "{cpu}"
+      memory: "{mem}"
+      cpu: "{cpu}"
     requests:
-    memory: "{mem}"
-    cpu: "{cpu}"
+      memory: "{mem}"
+      cpu: "{cpu}"
   persistence:
     size: {disksize}Gi
         """

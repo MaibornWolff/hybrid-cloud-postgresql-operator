@@ -1,11 +1,11 @@
+from datetime import datetime, timezone
 import kopf
 from .routing import postgres_backend
 from ..config import config_get
+from ..util import env, k8s
+from ..util.constants import BACKOFF
 from ..util.password import generate_password
 from ..util.reconcile_helpers import ignore_control_label_change, process_action_label, determine_resource_password, shorten
-from ..util import k8s
-from ..util import env
-from ..util.constants import BACKOFF
 
 
 def _tmp_secret(namespace, name):
@@ -60,7 +60,7 @@ def postgresql_server_handler(body, spec, status, meta, labels, name, namespace,
     # create server
     connection_data, warnings = backend.create_or_update_server(namespace, name, spec, password, admin_password_changed=not credentials_secret)
     for warning in warnings:
-        kopf.warn(body, reason="AzureWarning", message=warning)
+        kopf.warn(body, reason="CloudProviderWarning", message=warning)
     logger.info("Created/updated server. Creating credentials secret")
 
     # store credentials in final secret
@@ -95,6 +95,7 @@ def _status_server(name, namespace, status_obj, status, reason=None, backend=Non
         status_obj["backend"] = backend
     status_obj["deployment"] = {
         "status": status,
-        "reason": reason
+        "reason": reason,
+        "latest-update": datetime.now(tz=timezone.utc).isoformat()
     }
     k8s.patch_custom_object_status(k8s.PostgreSQLServer, namespace, name, status_obj)

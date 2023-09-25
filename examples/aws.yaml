@@ -1,15 +1,14 @@
-# A simple example, can be used with the azure and helm backends
+# Example that can be used with the AWS backends (make sure you have a class small configured in the operator config)
 apiVersion: hybridcloud.maibornwolff.de/v1alpha1
 kind: PostgreSQLServer
 metadata:
   name: demoteam
   namespace: default
 spec:
-  version: latest
+  version: "15.2"
   size:
-    cpu: 1
-    memoryMB: 512
-    storageGB: 1
+    class: small
+    storageGB: 20
   credentialsSecret: demoteam-postgres-credentials
 ---
 apiVersion: hybridcloud.maibornwolff.de/v1alpha1

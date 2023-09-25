@@ -4,8 +4,8 @@ from azure.mgmt.rdbms.postgresql_flexibleservers.models import ServerVersion, Sk
 from azure.mgmt.resource.locks.models import ManagementLockObject
 import kopf
 from .pgclient import PostgresSQLClient
-from ..util.azure import azure_client_locks, azure_client_postgres_flexible, azure_client_network, azure_client_privatedns
 from ..config import get_one_of, config_get
+from ..util.azure import azure_client_locks, azure_client_postgres_flexible, azure_client_network, azure_client_privatedns
 from ..util.reconcile_helpers import field_from_spec
 
 
@@ -18,6 +18,7 @@ EXTENSIONS_PARAMETER = "azure.extensions"
 PRELOAD_LIST = ["timescaledb", "pg_cron", "pg_partman_bgw", "pg_partman", "pg_prewarm", "pg_stat_statements", "pgaudit", "pglogical", "wal2json"]
 
 IGNORE_RESET_PARAMETERS = [PRELOAD_PARAMETER, EXTENSIONS_PARAMETER]
+
 
 def _calc_name(namespace, name):
     # Allow admins to override names so that existing storage accounts not following the schema can still be managed

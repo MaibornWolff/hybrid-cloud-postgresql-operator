@@ -1,3 +1,5 @@
+from ..backends.aws_aurora import AwsAuroraBackend
+from ..backends.aws_rds import AwsRdsBackend
 from ..backends.azure_postgresql import AzurePostgreSQLBackend
 from ..backends.azure_postgresqlflexible import AzurePostgreSQLFlexibleBackend
 from ..backends.helm_postgres import HelmPostgreSQLBackend
@@ -6,6 +8,8 @@ from ..config import config_get, ConfigurationException
 
 
 _backends = {
+    "awsaurora": AwsAuroraBackend,
+    "awsrds": AwsRdsBackend,
     "azurepostgres": AzurePostgreSQLBackend,
     "azurepostgresflexible": AzurePostgreSQLFlexibleBackend,
     "helmbitnami": HelmPostgreSQLBackend,
