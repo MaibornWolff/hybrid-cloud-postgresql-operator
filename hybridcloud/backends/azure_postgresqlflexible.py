@@ -230,6 +230,10 @@ class AzurePostgreSQLFlexibleBackend:
         
         # Iterate through the server properties that are currently set on the server
         for parameter in self._db_client.configurations.list_by_server(self._resource_group, server_name):
+            
+            if parameter.is_read_only:
+                continue
+            
             # Extensions which are set above are part of the server properties and shouldn't be reset
             if parameter.name in IGNORE_RESET_PARAMETERS:
                 continue
