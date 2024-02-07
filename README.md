@@ -153,6 +153,7 @@ backends:  # Configuration for the different backends. Required fields are only 
     pvc_cleanup: false  # If set to true the operator will when deleting a server also delete the persistent volumes, optional
 security: # Security-related settings independent of any backends, optional
   password_length: 16  # Number of characters to use for passwords that are generated for servers and databases, optional
+  special_characters: false # disable usage of special characters (+-_.:<>?) in the password. Defaults to "true"
 ```
 
 Single configuration options can also be provided via environment variables, the complete path is concatenated using underscores, written in uppercase and prefixed with `HYBRIDCLOUD_`. As an example: `backends.azure.subscription_id` becomes `HYBRIDCLOUD_BACKENDS_AZURE_SUBSCRIPTION_ID`.

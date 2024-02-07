@@ -74,7 +74,7 @@ def determine_resource_password(credentials_secret, tmp_secret_name):
     elif tmp_secret:
         password = base64.b64decode(tmp_secret.data["password"]).decode("utf-8")
     else:
-        password = generate_password(int(config_get("security.password_length", default=16)))
+        password = generate_password(int(config_get("security.password_length", default=16)), bool(config_get("security.special_characters", default=True)))
         k8s.create_secret(env.OPERATOR_NAMESPACE, tmp_secret_name, {"password": password})
     return password
 
