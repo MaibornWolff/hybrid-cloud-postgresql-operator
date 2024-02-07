@@ -19,7 +19,7 @@ def generate_password(length=16, special_chars=True, must_contain_all=True):
 
 
 def _check_contains(password, special_chars):
-    groups  = [string.ascii_lowercase, string.ascii_uppercase, string.digits]
+    groups = [string.ascii_lowercase, string.ascii_uppercase, string.digits]
     if special_chars:
         groups.append(SPECIAL_CHARACTERS)
     for group in groups:
