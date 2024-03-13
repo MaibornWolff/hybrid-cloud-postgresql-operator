@@ -39,7 +39,11 @@ volumes: []
 # List of volume mounts for the operator pod
 volumeMounts: []
 
+# Extra annotations to add to the operator pods
 podAnnotations: {}
+
+# Extra labels to add to the operator pods
+podLabels: {}
 
 podSecurityContext: {}
 
