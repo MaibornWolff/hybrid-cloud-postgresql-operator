@@ -17,7 +17,7 @@ PRELOAD_PARAMETER = "shared_preload_libraries"
 EXTENSIONS_PARAMETER = "azure.extensions"
 PRELOAD_LIST = ["timescaledb", "pg_cron", "pg_partman_bgw", "pg_partman", "pg_prewarm", "pg_stat_statements", "pgaudit", "pglogical", "wal2json"]
 
-IGNORE_RESET_PARAMETERS = [PRELOAD_PARAMETER, EXTENSIONS_PARAMETER]
+IGNORE_RESET_PARAMETERS = [PRELOAD_PARAMETER, EXTENSIONS_PARAMETER, "log_autovacuum_min_duration", "vacuum_cost_page_miss"]
 
 
 def _calc_name(namespace, name):
@@ -230,14 +230,14 @@ class AzurePostgreSQLFlexibleBackend:
         
         # Iterate through the server properties that are currently set on the server
         for parameter in self._db_client.configurations.list_by_server(self._resource_group, server_name):
-            
+
             if parameter.is_read_only:
                 continue
-            
+
             # Extensions which are set above are part of the server properties and shouldn't be reset
             if parameter.name in IGNORE_RESET_PARAMETERS:
                 continue
-            
+
             changed = False
             value = ""
 
@@ -342,6 +342,7 @@ class AzurePostgreSQLFlexibleBackend:
     def _pgclient(self, admin_credentials, dbname=None) -> PostgresSQLClient:
         return PostgresSQLClient(admin_credentials, dbname)
 
+
 def _determine_sku(size_spec):
     warnings = []
     size_class = size_spec.get("class")
@@ -372,6 +373,15 @@ def _map_version(version: str):
         return ServerVersion.ELEVEN
     elif version.startswith("12"):
         return ServerVersion.TWELVE
+    elif version.startswith("13"):
+        return ServerVersion.THIRTEEN
+    # versions 14-16 are not directly exposed in the API but as strings are still accepted
+    elif version.startswith("14"):
+        return "14"
+    elif version.startswith("15"):
+        return "15"
+    elif version.startswith("16"):
+        return "16"
     else:
         return ServerVersion.THIRTEEN
 
