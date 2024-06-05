@@ -17,7 +17,7 @@ PRELOAD_PARAMETER = "shared_preload_libraries"
 EXTENSIONS_PARAMETER = "azure.extensions"
 PRELOAD_LIST = ["timescaledb", "pg_cron", "pg_partman_bgw", "pg_partman", "pg_prewarm", "pg_stat_statements", "pgaudit", "pglogical", "wal2json"]
 
-IGNORE_RESET_PARAMETERS = [PRELOAD_PARAMETER, EXTENSIONS_PARAMETER, "log_autovacuum_min_duration", "vacuum_cost_page_miss"]
+IGNORE_RESET_PARAMETERS = [PRELOAD_PARAMETER, EXTENSIONS_PARAMETER, "log_autovacuum_min_duration", "vacuum_cost_page_miss", "temp_tablespaces"]
 
 
 def _calc_name(namespace, name):
@@ -119,9 +119,11 @@ class AzurePostgreSQLFlexibleBackend:
                     return True
                 if server.maintenance_window != maintenance_window:
                     return True
-                if server.tags != tags:
-                    return True
-                return False
+                tags_changed = False
+                for k, v in tags.items():
+                    if server.tags.get(k) != v:
+                        tags_changed = True
+                return tags_changed
             changed = compare() or admin_password_changed
         except:
             server = None
@@ -149,7 +151,6 @@ class AzurePostgreSQLFlexibleBackend:
             server = poller.result()
         elif changed:
             parameters = ServerForUpdate(
-                location=self._location,
                 sku=sku,
                 administrator_login_password=password,
                 storage=Storage(storage_size_gb=storage_gb),
@@ -216,18 +217,19 @@ class AzurePostgreSQLFlexibleBackend:
         should_restart = False
 
         if preload_extensions != applied_preload_extensions:
-            self._logger.info(f"Updating list of extensions from {','.join(applied_preload_extensions)} to {','.join(extensions)}")
+            self._logger.info(f"Updating list of preload extensions from \"{','.join(applied_preload_extensions)}\" to \"{','.join(preload_extensions)}\"")
             # Update configuration
-            poller = self._db_client.configurations.begin_put(self._resource_group, server_name, PRELOAD_PARAMETER, Configuration(value=",".join(extensions), source="user-override"))
+            poller = self._db_client.configurations.begin_put(self._resource_group, server_name, PRELOAD_PARAMETER, Configuration(value=",".join(preload_extensions), source="user-override"))
             poller.result()
             should_restart = True
-        
+
         if extensions != applied_allowed_extenions:
+            self._logger.info(f"Updating list of extensions from \"{','.join(applied_allowed_extenions)}\" to \"{','.join(extensions)}\"")
             # Update configuration
             poller = self._db_client.configurations.begin_put(self._resource_group, server_name, EXTENSIONS_PARAMETER, Configuration(value=",".join(extensions), source="user-override"))
             poller.result()
             should_restart = True
-        
+
         # Iterate through the server properties that are currently set on the server
         for parameter in self._db_client.configurations.list_by_server(self._resource_group, server_name):
 
@@ -262,7 +264,7 @@ class AzurePostgreSQLFlexibleBackend:
 
         if should_restart:
             # Restart server
-            self._logger.info("Restarting server due to changed server parameters")
+            self._logger.info("Restarting server due to changed server parameters or extensions")
             poller = self._db_client.servers.begin_restart(self._resource_group, server_name)
             poller.result()
             self._logger.info("Initiated server restart")
@@ -320,7 +322,7 @@ class AzurePostgreSQLFlexibleBackend:
         poller.result()
     
     def create_or_update_user(self, namespace, server_name, database_name, username, password, admin_credentials=None):
-        pgclient = self._pgclient(admin_credentials)
+        pgclient = self._pgclient(admin_credentials, database_name)
         newly_created = pgclient.create_or_update_user(username, password, database_name)
         return newly_created, {
             "username": username,
