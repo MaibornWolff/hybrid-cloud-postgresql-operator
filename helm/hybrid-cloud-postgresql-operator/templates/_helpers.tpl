@@ -40,6 +40,9 @@ helm.sh/chart: {{ include "operator.chart" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- range $key, $value := .Values.extraLabels }}
+{{ $key }}: {{ $value | quote }}
+{{- end }}
 {{- end }}
 
 {{/*
@@ -48,6 +51,9 @@ Selector labels
 {{- define "operator.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "operator.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- range $key, $value := .Values.extraLabelsSelector }}
+{{ $key }}: {{ $value | quote }}
+{{- end }}
 {{- end }}
 
 {{/*
