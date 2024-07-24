@@ -34,6 +34,15 @@ envSecret: null
 # A list of environment variables (with name, value) to provide to the operator
 extraEnv: []
 
+# provide users with the option to add additional common labels to the deployment
+# NOTE that all additional selector labels from `extraLabelsSelector` are already included in the "common" labels
+# and can not be added twice
+extraLabels: {}
+# provide users with the option to add additional selector labels to deployment and its pods
+# NOTE that selector labels are immutable once the deployment was created
+# so adding new ones requires deleting the deployment first
+extraLabelsSelector: {}
+
 # List of volumes to mount into the operator pod
 volumes: []
 # List of volume mounts for the operator pod
