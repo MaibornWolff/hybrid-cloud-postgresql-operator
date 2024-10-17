@@ -1,11 +1,11 @@
-kubernetes==30.1.0
+kubernetes==31.0.0
 kopf==1.37.2
 # Do not use newest version as it removes some fields from the flexible server Configuration class (e.g. is_read_only)
-azure-mgmt-rdbms==10.2.0b17
-azure-identity==1.17.1
+azure-mgmt-rdbms==10.2.0b18
+azure-identity==1.19.0
 azure-mgmt-resource==23.1.1
-psycopg2-binary==2.9.9
-azure-mgmt-privatedns==1.1.0
-azure-mgmt-network==26.0.0
+psycopg2-binary==2.9.10
+azure-mgmt-privatedns==1.2.0
+azure-mgmt-network==27.0.0
 pyyaml==6.0.2
-boto3==1.35.0
+boto3==1.35.43
