@@ -1,4 +1,8 @@
 import asyncio
+from datetime import datetime
+import base64
+import json
+import os
 import logging
 import random
 import kopf
@@ -33,6 +37,34 @@ def configure(settings: kopf.OperatorSettings, **_):
     settings.watching.connect_timeout = 60
     settings.watching.client_timeout = 120
     settings.networking.request_timeout = 120
+
+
+@kopf.on.login(errors=kopf.ErrorsMode.TEMPORARY, retries=5)
+def login_fn(**kwargs):
+    token_path = os.getenv("TOKEN_PATH")
+    if token_path:
+        # This is a workaround for https://github.com/nolar/kopf/issues/980
+        try:
+            logging.info(f"Using token from {token_path} for authentication")
+            with open(token_path) as f:
+                token = f.read()
+            _header, payload, _sig = token.split(".", 2)
+            payload = base64.b64decode(payload)
+            payload = json.loads(payload)
+            exp = payload["exp"]
+            dt = datetime.fromtimestamp(exp)
+            return kopf.ConnectionInfo(
+                server='https://kubernetes.default.svc.cluster.local',
+                insecure=True,
+                scheme='Bearer',
+                token=token,
+                expiration=dt,
+            )
+        except:
+            logging.exception("Failed to use token. Falling back to normal kube-client authentication")
+            return kopf.login_via_client(**kwargs)
+    else:
+        return kopf.login_via_client(**kwargs)
 
 
 # Check config to abort early in case of problem

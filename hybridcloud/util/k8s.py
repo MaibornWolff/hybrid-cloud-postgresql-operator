@@ -1,5 +1,6 @@
 import base64
 from dataclasses import dataclass
+import os
 import re
 import kopf
 import kubernetes
@@ -30,6 +31,7 @@ def decode_secret_data(secret):
 
 
 def create_secret(namespace, name, data, labels={}):
+    _auth()
     api = kubernetes.client.CoreV1Api()
     metadata = {
         "name": name,
@@ -41,6 +43,7 @@ def create_secret(namespace, name, data, labels={}):
 
 
 def get_secret(namespace, name):
+    _auth()
     api = kubernetes.client.CoreV1Api()
     try:
         return api.read_namespaced_secret(name, namespace)
@@ -49,6 +52,7 @@ def get_secret(namespace, name):
 
 
 def update_secret(namespace, name, data):
+    _auth()
     api = kubernetes.client.CoreV1Api()
     metadata = {
         "name": name,
@@ -66,6 +70,7 @@ def create_or_update_secret(namespace, name, data, labels={}):
 
 
 def delete_secret(namespace, name):
+    _auth()
     api = kubernetes.client.CoreV1Api()
     try:
         api.delete_namespaced_secret(name, namespace)
@@ -74,11 +79,13 @@ def delete_secret(namespace, name):
 
 
 def patch_custom_object(resource: Resource, namespace: str,  name: str, body):
+    _auth()
     api = kubernetes.client.CustomObjectsApi()
     api.patch_namespaced_custom_object(resource.group, resource.version, namespace, resource.plural, name, body)
 
 
 def get_custom_object(resource: Resource, namespace: str, name: str):
+    _auth()
     api = kubernetes.client.CustomObjectsApi()
     try:
         return api.get_namespaced_custom_object(resource.group, resource.version, namespace, resource.plural, name)
@@ -87,6 +94,7 @@ def get_custom_object(resource: Resource, namespace: str, name: str):
 
 
 def patch_custom_object_status(resource: Resource, namespace: str, name: str, status):
+    _auth()
     body = {
         "metadata": {
             "name": name,
@@ -98,6 +106,7 @@ def patch_custom_object_status(resource: Resource, namespace: str, name: str, st
 
 
 def list_pvcs(namespace: str, name_pattern: str):
+    _auth()
     api = kubernetes.client.CoreV1Api()
     pattern = re.compile(name_pattern)
     pvcs = api.list_namespaced_persistent_volume_claim(namespace)
@@ -107,8 +116,14 @@ def list_pvcs(namespace: str, name_pattern: str):
 
 
 def delete_pvc(namespace: str, name: str):
+    _auth()
     api = kubernetes.client.CoreV1Api()
     try:
         api.delete_namespaced_persistent_volume_claim(name, namespace)
     except:
         pass
+
+def _auth():
+    if os.getenv("TOKEN_PATH"):
+        # We only need to explictly auth if we use a token, otherwise kopf takes care of that for us
+        kubernetes.config.load_config()
