@@ -93,3 +93,6 @@ affinity: {}
 
 strategy:
   type: Recreate
+
+# Workaround for token expiration in AKS >= 1.30 that leads to operator crashes due to a bug in the underlying kopf library
+tokenExpirationWorkaround: false

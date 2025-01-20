@@ -32,6 +32,10 @@ To test out the operator you do not need Azure or AWS, you just need a kubernete
 
 Note: You have to manually clean up any remaining PVCs in kubernetes as these are not automatically deleted to avoid accidental data loss.
 
+> [!IMPORTANT]
+> There is currently a [bug in the kopf library](https://github.com/nolar/kopf/issues/980) used by this operator that leads to crashes on AKS clusters with Kubernetes versions >= 1.30 due to expiring tokens.
+> Add `tokenExpirationWorkaround: true` to the values to activate a workaround.
+
 ## Operations Guide
 
 To achieve its hybrid-cloud feature the operator abstracts between the generic API (Custom resources `PostgreSQLServer`, `PostgreSQLDatabase`) and the concrete implementation for a specific cloud service. The concrete implementations are called backends. You can configure which backends should be active in the configuration. If you have several backends active the user can also select one (for examaple choose between Azure Database for Postgres single server and flexible server).

@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import base64
 import json
 import os
@@ -48,11 +48,16 @@ def login_fn(**kwargs):
             logging.info(f"Using token from {token_path} for authentication")
             with open(token_path) as f:
                 token = f.read()
-            _header, payload, _sig = token.split(".", 2)
-            payload = base64.b64decode(payload)
-            payload = json.loads(payload)
-            exp = payload["exp"]
-            dt = datetime.fromtimestamp(exp)
+            try:
+                _header, payload, _sig = token.split(".", 2)
+                # Decode the token payload, add padding if necessary
+                payload = base64.b64decode(payload + '=' * (-len(payload) % 4))
+                payload = json.loads(payload)
+                exp = payload["exp"]
+                dt = datetime.fromtimestamp(exp)
+            except:
+                logging.exception("Could not parse token, falling back to default expiration 1h")
+                dt = datetime.now() + timedelta(hours=1)
             return kopf.ConnectionInfo(
                 server='https://kubernetes.default.svc.cluster.local',
                 insecure=True,
