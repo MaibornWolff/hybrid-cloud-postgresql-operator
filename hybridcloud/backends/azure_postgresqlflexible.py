@@ -377,13 +377,12 @@ def _map_version(version: str):
         return ServerVersion.TWELVE
     elif version.startswith("13"):
         return ServerVersion.THIRTEEN
-    # versions 14-16 are not directly exposed in the API but as strings are still accepted
     elif version.startswith("14"):
-        return "14"
+        return ServerVersion.FOURTEEN
     elif version.startswith("15"):
-        return "15"
+        return ServerVersion.FIFTEEN
     elif version.startswith("16"):
-        return "16"
+        return ServerVersion.SIXTEEN
     else:
         return ServerVersion.THIRTEEN
 
