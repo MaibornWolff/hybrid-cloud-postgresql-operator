@@ -17,7 +17,7 @@ PRELOAD_PARAMETER = "shared_preload_libraries"
 EXTENSIONS_PARAMETER = "azure.extensions"
 PRELOAD_LIST = ["timescaledb", "pg_cron", "pg_partman_bgw", "pg_partman", "pg_prewarm", "pg_stat_statements", "pgaudit", "pglogical", "wal2json"]
 
-IGNORE_RESET_PARAMETERS = [PRELOAD_PARAMETER, EXTENSIONS_PARAMETER, "log_autovacuum_min_duration", "vacuum_cost_page_miss", "temp_tablespaces"]
+IGNORE_RESET_PARAMETERS = [PRELOAD_PARAMETER, EXTENSIONS_PARAMETER, "log_autovacuum_min_duration", "vacuum_cost_page_miss", "temp_tablespaces", "commit_timestamp_buffers", "subtransaction_buffers", "transaction_buffers"]
 
 
 def _calc_name(namespace, name):
@@ -57,7 +57,7 @@ class AzurePostgreSQLFlexibleBackend:
         if storage_limit and size.get("storageGB", 1) > storage_limit:
             return (False, f"size.storageGB is limited to {storage_limit} GB")
         if size.get("storageGB", 32) < 32:
-            return (False, f"size.storageGB must be at least 32 GB")
+            return (False, "size.storageGB must be at least 32 GB")
         return (True, "")
 
     def server_exists(self, namespace, name):
@@ -351,7 +351,7 @@ def _determine_sku(size_spec):
     default_class = config_get("backends.azurepostgresflexible.default_class")
     if size_class and default_class:
         classes = config_get("backends.azurepostgresflexible.classes", default=[])
-        if not size_class in classes:
+        if size_class not in classes:
             warnings.append(f"selected class {size_class} is not allowed. Falling back to default {default_class}")
             size_class = default_class
         selected_class = classes[size_class]
@@ -383,6 +383,9 @@ def _map_version(version: str):
         return ServerVersion.FIFTEEN
     elif version.startswith("16"):
         return ServerVersion.SIXTEEN
+    elif version.startswith("17"):
+        # dbms module does not have a constant, but string works as well
+        return "17"
     else:
         return ServerVersion.THIRTEEN
 
