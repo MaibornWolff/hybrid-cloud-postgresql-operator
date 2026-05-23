@@ -17,7 +17,11 @@ PRELOAD_PARAMETER = "shared_preload_libraries"
 EXTENSIONS_PARAMETER = "azure.extensions"
 PRELOAD_LIST = ["timescaledb", "pg_cron", "pg_partman_bgw", "pg_partman", "pg_prewarm", "pg_stat_statements", "pgaudit", "pglogical", "wal2json"]
 
-IGNORE_RESET_PARAMETERS = [PRELOAD_PARAMETER, EXTENSIONS_PARAMETER, "log_autovacuum_min_duration", "vacuum_cost_page_miss", "temp_tablespaces", "commit_timestamp_buffers", "subtransaction_buffers", "transaction_buffers"]
+IGNORE_RESET_PARAMETERS = [PRELOAD_PARAMETER, EXTENSIONS_PARAMETER, "log_autovacuum_min_duration",
+                           "vacuum_cost_page_miss", "temp_tablespaces", "commit_timestamp_buffers",
+                           "subtransaction_buffers", "transaction_buffers", "azure.enable_temp_tablespaces_on_local_ssd",
+                           "azure.enable_temp_tablespaces_on_local_ssd", "io_max_concurrency", "pg_qs.track_utility",
+                           "effective_io_concurrency"]
 
 
 def _calc_name(namespace, name):
@@ -386,6 +390,9 @@ def _map_version(version: str):
     elif version.startswith("17"):
         # dbms module does not have a constant, but string works as well
         return "17"
+    elif version.startswith("18"):
+        # dbms module does not have a constant, but string works as well
+        return "18"
     else:
         return ServerVersion.THIRTEEN
 

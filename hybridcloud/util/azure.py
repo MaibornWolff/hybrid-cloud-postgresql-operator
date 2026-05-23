@@ -3,7 +3,7 @@ from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
 from azure.mgmt.rdbms.postgresql_flexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
 from azure.mgmt.privatedns import PrivateDnsManagementClient
 from azure.mgmt.network import NetworkManagementClient
-from azure.mgmt.resource import ManagementLockClient
+from azure.mgmt.resource.locks import ManagementLockClient
 from ..config import get_one_of
 
 
