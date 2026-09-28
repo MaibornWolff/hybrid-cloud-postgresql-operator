@@ -320,6 +320,9 @@ class AzurePostgreSQLBackend:
         }
 
     def delete_user(self, namespace, server_name, username, admin_credentials=None):
+        if _backend_config("database_delete_fake", default=False):
+            # We do not delete the database, also keep the user to preserve any objects owned by it
+            return
         pgclient = self._pgclient(admin_credentials)
         pgclient.delete_user(username)
 
